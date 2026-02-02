@@ -26,30 +26,30 @@ INNER JOIN temp_flowchart_ap ap ON icu.hadm_id = ap.hadm_id
 INNER JOIN mimiciv_hosp.patients pat ON icu.subject_id = pat.subject_id;
 
 --------------------------------------------------------------------------------
--- Step 1: 排除非首次 ICU - 仅保留每位患者首次入住
+-- Step 1: 排除 ICU LOS < 24 小时（先 LOS，los 单位为天，>=1 即 >=24h）
 --------------------------------------------------------------------------------
 DROP TABLE IF EXISTS temp_flowchart_step1;
 CREATE TEMP TABLE temp_flowchart_step1 AS
-SELECT * FROM (
-    SELECT *, ROW_NUMBER() OVER (PARTITION BY subject_id ORDER BY intime) AS stay_seq
-    FROM temp_flowchart_step0
-) t WHERE stay_seq = 1;
+SELECT * FROM temp_flowchart_step0
+WHERE los >= 1;
 
 --------------------------------------------------------------------------------
--- Step 2: 排除年龄 < 18 岁
+-- Step 2: 排除非首次 ICU - 在 LOS>=24h 的入住中保留每位患者首次入住（再首次）
 --------------------------------------------------------------------------------
 DROP TABLE IF EXISTS temp_flowchart_step2;
 CREATE TEMP TABLE temp_flowchart_step2 AS
-SELECT * FROM temp_flowchart_step1
-WHERE admission_age >= 18;
+SELECT * FROM (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY subject_id ORDER BY intime) AS stay_seq
+    FROM temp_flowchart_step1
+) t WHERE stay_seq = 1;
 
 --------------------------------------------------------------------------------
--- Step 3: 排除 ICU LOS < 24 小时（los 单位为天，>=1 即 >=24h）
+-- Step 3: 排除年龄 < 18 岁
 --------------------------------------------------------------------------------
 DROP TABLE IF EXISTS temp_flowchart_step3;
 CREATE TEMP TABLE temp_flowchart_step3 AS
 SELECT * FROM temp_flowchart_step2
-WHERE los >= 1;
+WHERE admission_age >= 18;
 
 --------------------------------------------------------------------------------
 -- Step 4: 排除关键生理指标缺失严重（>80% 缺失）
@@ -86,17 +86,17 @@ SELECT
     NULL::int AS excluded
 UNION ALL
 SELECT 
-    '排除1: 非首次ICU（保留首次）',
+    '排除1: ICU LOS<24h（先LOS）',
     (SELECT COUNT(*)::int FROM temp_flowchart_step1),
     (SELECT COUNT(*)::int FROM temp_flowchart_step0) - (SELECT COUNT(*)::int FROM temp_flowchart_step1)
 UNION ALL
 SELECT 
-    '排除2: 年龄<18岁',
+    '排除2: 非首次ICU（保留首次，再首次）',
     (SELECT COUNT(*)::int FROM temp_flowchart_step2),
     (SELECT COUNT(*)::int FROM temp_flowchart_step1) - (SELECT COUNT(*)::int FROM temp_flowchart_step2)
 UNION ALL
 SELECT 
-    '排除3: ICU LOS<24h',
+    '排除3: 年龄<18岁',
     (SELECT COUNT(*)::int FROM temp_flowchart_step3),
     (SELECT COUNT(*)::int FROM temp_flowchart_step2) - (SELECT COUNT(*)::int FROM temp_flowchart_step3)
 UNION ALL

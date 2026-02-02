@@ -249,10 +249,11 @@ LEFT JOIN mimiciv_derived.vasoactive_agent vaso ON c.stay_id = vaso.stay_id
 GROUP BY c.stay_id;
 
 --------------------------------------------------------------------------------
--- 7. Final Integration
+-- 7. Final Integration（排除关键生理指标缺失>80%者，与 flowchart 一致）
 --------------------------------------------------------------------------------
 DROP TABLE IF EXISTS my_custom_schema.ap_final_analysis_cohort;
 CREATE TABLE my_custom_schema.ap_final_analysis_cohort AS
+WITH base_cohort AS (
 SELECT
     c.*,
     -- 1. 结局指标 (Outcomes)
@@ -318,7 +319,21 @@ LEFT JOIN mimiciv_derived.first_day_lab lab ON c.stay_id = lab.stay_id
 LEFT JOIN mimiciv_derived.first_day_bg bg ON c.stay_id = bg.stay_id
 LEFT JOIN temp_lab_slopes ls ON c.hadm_id = ls.hadm_id
 LEFT JOIN temp_interventions intv ON c.stay_id = intv.stay_id
-LEFT JOIN temp_comorbidities com ON c.hadm_id = com.hadm_id;
+LEFT JOIN temp_comorbidities com ON c.hadm_id = com.hadm_id
+)
+SELECT * FROM base_cohort
+WHERE (
+    (CASE WHEN creatinine_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN bun_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN lactate_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN pao2fio2ratio_min IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN ph_min IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN wbc_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN hemoglobin_min IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN bilirubin_total_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN sodium_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN albumin_min IS NULL THEN 1 ELSE 0 END)
+)::float / 10.0 <= 0.8;
 
 -- 统计验证：检查 POF 和 早期死亡的重叠情况
 SELECT 

@@ -10,7 +10,7 @@ WHERE diagnosisstring ILIKE '%pancreatit%'
 GROUP BY patientunitstayid;
 
 --------------------------------------------------------------------------------
--- 2. 构建核心队列 (18岁以上, ICU >= 24h)
+-- 2. 构建核心队列 (先 LOS>=24h，再首次入住，18岁以上，与 flowchart 一致)
 --------------------------------------------------------------------------------
 DROP TABLE IF EXISTS cohort_base;
 CREATE TEMP TABLE cohort_base AS
@@ -22,6 +22,7 @@ WITH ranked_stays AS (
         ) AS stay_rank
     FROM eicu_derived.icustay_detail i
     INNER JOIN temp_ap_patients ap ON i.patientunitstayid = ap.patientunitstayid
+    WHERE i.icu_los_hours >= 24  -- 先 LOS
 ),
 age_parsed AS (
     SELECT *,
@@ -45,8 +46,7 @@ SELECT
         ELSE NULL 
     END AS bmi
 FROM age_parsed
-WHERE stay_rank = 1 
-  AND icu_los_hours >= 24
+WHERE stay_rank = 1   -- 再首次（在 LOS>=24h 的入住中取首次）
   AND age_num >= 18;
 CREATE INDEX IF NOT EXISTS idx_cohort_pid ON cohort_base(patientunitstayid);
 ANALYZE cohort_base;
@@ -571,6 +571,18 @@ label_calc AS (
         END AS composite_outcome
     FROM base_final
 )
--- 最终选择：排除 pof 为 NULL 的那 1 例
+-- 最终选择：排除 pof 为 NULL 及关键生理指标缺失>80%者（与 flowchart 一致）
 SELECT * FROM label_calc 
-WHERE pof IS NOT NULL;
+WHERE pof IS NOT NULL
+  AND (
+    (CASE WHEN creatinine_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN bun_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN lactate_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN pao2fio2ratio_min IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN ph_min IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN wbc_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN hemoglobin_min IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN bilirubin_total_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN sodium_max IS NULL THEN 1 ELSE 0 END) +
+    (CASE WHEN albumin_min IS NULL THEN 1 ELSE 0 END)
+  )::float / 10.0 <= 0.8;
