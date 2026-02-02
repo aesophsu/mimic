@@ -1,0 +1,31 @@
+﻿Endpoint,Outcome,Group,Model,AUC (95% CI),Sens.,Spec.,F1,Optimal Cut-off
+Primary,POF,Full Population,XGBoost,0.872 (0.818–0.914),0.849,0.776,0.772,0.369
+Primary,POF,Full Population,SVM,0.871 (0.820–0.913),0.895,0.702,0.759,0.324
+Primary,POF,Full Population,Random Forest,0.869 (0.815–0.914),0.861,0.776,0.779,0.370
+Primary,POF,Full Population,Decision Tree,0.853 (0.795–0.902),0.814,0.776,0.753,0.415
+Primary,POF,Full Population,Logistic Regression,0.848 (0.791–0.897),0.744,0.851,0.753,0.519
+Primary,POF,Subgroup (No Renal),SVM,0.813 (0.696–0.915),0.667,0.804,0.518,0.324
+Primary,POF,Subgroup (No Renal),XGBoost,0.789 (0.662–0.898),0.571,0.866,0.522,0.369
+Primary,POF,Subgroup (No Renal),Random Forest,0.780 (0.644–0.901),0.571,0.866,0.522,0.370
+Primary,POF,Subgroup (No Renal),Logistic Regression,0.779 (0.634–0.905),0.524,0.928,0.564,0.519
+Primary,POF,Subgroup (No Renal),Decision Tree,0.775 (0.657–0.876),0.524,0.866,0.489,0.415
+Secondary,MORTALITY,Full Population,Logistic Regression,0.842 (0.767–0.905),0.676,0.887,0.590,0.264
+Secondary,MORTALITY,Full Population,SVM,0.824 (0.745–0.887),0.824,0.747,0.514,0.140
+Secondary,MORTALITY,Full Population,XGBoost,0.823 (0.747–0.887),0.853,0.645,0.450,0.126
+Secondary,MORTALITY,Full Population,Random Forest,0.821 (0.743–0.882),0.853,0.683,0.475,0.136
+Secondary,MORTALITY,Full Population,Decision Tree,0.753 (0.650–0.833),0.676,0.763,0.455,0.201
+Secondary,MORTALITY,Subgroup (No Renal),Random Forest,0.831 (0.699–0.948),0.700,0.861,0.438,0.136
+Secondary,MORTALITY,Subgroup (No Renal),XGBoost,0.811 (0.681–0.937),0.700,0.815,0.378,0.126
+Secondary,MORTALITY,Subgroup (No Renal),SVM,0.792 (0.623–0.944),0.700,0.898,0.500,0.140
+Secondary,MORTALITY,Subgroup (No Renal),Logistic Regression,0.785 (0.653–0.914),0.400,0.963,0.444,0.264
+Secondary,MORTALITY,Subgroup (No Renal),Decision Tree,0.754 (0.591–0.898),0.300,0.917,0.273,0.201
+Composite,COMPOSITE,Full Population,Random Forest,0.887 (0.838–0.928),0.735,0.902,0.791,0.514
+Composite,COMPOSITE,Full Population,XGBoost,0.884 (0.834–0.927),0.725,0.910,0.789,0.531
+Composite,COMPOSITE,Full Population,SVM,0.879 (0.827–0.921),0.714,0.918,0.786,0.604
+Composite,COMPOSITE,Full Population,Logistic Regression,0.872 (0.816–0.919),0.775,0.885,0.808,0.526
+Composite,COMPOSITE,Full Population,Decision Tree,0.870 (0.815–0.915),0.725,0.893,0.780,0.510
+Composite,COMPOSITE,Subgroup (No Renal),XGBoost,0.791 (0.682–0.894),0.407,0.956,0.524,0.531
+Composite,COMPOSITE,Subgroup (No Renal),Random Forest,0.787 (0.681–0.887),0.370,0.956,0.488,0.514
+Composite,COMPOSITE,Subgroup (No Renal),Decision Tree,0.773 (0.664–0.872),0.333,0.945,0.439,0.510
+Composite,COMPOSITE,Subgroup (No Renal),Logistic Regression,0.767 (0.651–0.883),0.518,0.945,0.609,0.526
+Composite,COMPOSITE,Subgroup (No Renal),SVM,0.765 (0.646–0.882),0.333,0.978,0.474,0.604

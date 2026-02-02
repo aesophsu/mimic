@@ -1,0 +1,27 @@
+# 数据文件（MIMIC/eICU 需授权，禁止上传）
+data/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# 模型与中间产物（可重新生成，保留 artifacts/features/ 配置）
+artifacts/models/
+artifacts/scalers/
+
+# 系统文件
+.DS_Store
+*.swp
+*.swo
+
+# 环境
+.env
+.env.local

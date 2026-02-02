@@ -1,0 +1,350 @@
+{
+    "pof": {
+        "rdw_max": {
+            "ks_statistic": 0.0808,
+            "p_value": 0.0015,
+            "drift_significant": "显著",
+            "max_diff": 0.0808
+        },
+        "ph_max": {
+            "ks_statistic": 0.09,
+            "p_value": 0.0003,
+            "drift_significant": "显著",
+            "max_diff": 0.09
+        },
+        "albumin_min": {
+            "ks_statistic": 0.1314,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1314
+        },
+        "sodium_min": {
+            "ks_statistic": 0.089,
+            "p_value": 0.0003,
+            "drift_significant": "显著",
+            "max_diff": 0.089
+        },
+        "wbc_max": {
+            "ks_statistic": 0.1479,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1479
+        },
+        "spo2_max": {
+            "ks_statistic": 0.4478,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.4478
+        },
+        "albumin_max": {
+            "ks_statistic": 0.1703,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1703
+        },
+        "alp_min": {
+            "ks_statistic": 0.0854,
+            "p_value": 0.0006,
+            "drift_significant": "显著",
+            "max_diff": 0.0854
+        },
+        "ph_min": {
+            "ks_statistic": 0.0855,
+            "p_value": 0.0006,
+            "drift_significant": "显著",
+            "max_diff": 0.0855
+        },
+        "creatinine_max": {
+            "ks_statistic": 0.072,
+            "p_value": 0.0065,
+            "drift_significant": "显著",
+            "max_diff": 0.072
+        },
+        "pao2fio2ratio_min": {
+            "ks_statistic": 0.2278,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.2278
+        },
+        "summary": {
+            "total_features": 11,
+            "significant_drift": 11,
+            "top_drift": [
+                [
+                    "spo2_max",
+                    0.4478
+                ],
+                [
+                    "pao2fio2ratio_min",
+                    0.2278
+                ],
+                [
+                    "albumin_max",
+                    0.1703
+                ],
+                [
+                    "wbc_max",
+                    0.1479
+                ],
+                [
+                    "albumin_min",
+                    0.1314
+                ],
+                [
+                    "ph_max",
+                    0.09
+                ],
+                [
+                    "sodium_min",
+                    0.089
+                ],
+                [
+                    "ph_min",
+                    0.0855
+                ],
+                [
+                    "alp_min",
+                    0.0854
+                ],
+                [
+                    "rdw_max",
+                    0.0808
+                ]
+            ]
+        }
+    },
+    "mortality": {
+        "admission_age": {
+            "ks_statistic": 0.1355,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1355
+        },
+        "wbc_min": {
+            "ks_statistic": 0.0337,
+            "p_value": 0.5489,
+            "drift_significant": "不显著",
+            "max_diff": 0.0337
+        },
+        "wbc_max": {
+            "ks_statistic": 0.1479,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1479
+        },
+        "albumin_min": {
+            "ks_statistic": 0.1314,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1314
+        },
+        "albumin_max": {
+            "ks_statistic": 0.1703,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1703
+        },
+        "bun_max": {
+            "ks_statistic": 0.1217,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1217
+        },
+        "ptt_min": {
+            "ks_statistic": 0.2452,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.2452
+        },
+        "rdw_max": {
+            "ks_statistic": 0.0808,
+            "p_value": 0.0015,
+            "drift_significant": "显著",
+            "max_diff": 0.0808
+        },
+        "lactate_max": {
+            "ks_statistic": 0.1442,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1442
+        },
+        "spo2_slope": {
+            "ks_statistic": 0.6459,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.6459
+        },
+        "pao2fio2ratio_min": {
+            "ks_statistic": 0.2278,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.2278
+        },
+        "tbar": {
+            "ks_statistic": 0.1092,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1092
+        },
+        "summary": {
+            "total_features": 12,
+            "significant_drift": 11,
+            "top_drift": [
+                [
+                    "spo2_slope",
+                    0.6459
+                ],
+                [
+                    "ptt_min",
+                    0.2452
+                ],
+                [
+                    "pao2fio2ratio_min",
+                    0.2278
+                ],
+                [
+                    "albumin_max",
+                    0.1703
+                ],
+                [
+                    "wbc_max",
+                    0.1479
+                ],
+                [
+                    "lactate_max",
+                    0.1442
+                ],
+                [
+                    "admission_age",
+                    0.1355
+                ],
+                [
+                    "albumin_min",
+                    0.1314
+                ],
+                [
+                    "bun_max",
+                    0.1217
+                ],
+                [
+                    "tbar",
+                    0.1092
+                ]
+            ]
+        }
+    },
+    "composite": {
+        "spo2_max": {
+            "ks_statistic": 0.4478,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.4478
+        },
+        "aniongap_min": {
+            "ks_statistic": 0.2786,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.2786
+        },
+        "lactate_max": {
+            "ks_statistic": 0.1442,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1442
+        },
+        "wbc_max": {
+            "ks_statistic": 0.1479,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1479
+        },
+        "bun_min": {
+            "ks_statistic": 0.0902,
+            "p_value": 0.0003,
+            "drift_significant": "显著",
+            "max_diff": 0.0902
+        },
+        "alp_min": {
+            "ks_statistic": 0.0854,
+            "p_value": 0.0006,
+            "drift_significant": "显著",
+            "max_diff": 0.0854
+        },
+        "rdw_max": {
+            "ks_statistic": 0.0808,
+            "p_value": 0.0015,
+            "drift_significant": "显著",
+            "max_diff": 0.0808
+        },
+        "ph_min": {
+            "ks_statistic": 0.0855,
+            "p_value": 0.0006,
+            "drift_significant": "显著",
+            "max_diff": 0.0855
+        },
+        "albumin_min": {
+            "ks_statistic": 0.1314,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.1314
+        },
+        "creatinine_max": {
+            "ks_statistic": 0.072,
+            "p_value": 0.0065,
+            "drift_significant": "显著",
+            "max_diff": 0.072
+        },
+        "pao2fio2ratio_min": {
+            "ks_statistic": 0.2278,
+            "p_value": 0.0,
+            "drift_significant": "显著",
+            "max_diff": 0.2278
+        },
+        "summary": {
+            "total_features": 11,
+            "significant_drift": 11,
+            "top_drift": [
+                [
+                    "spo2_max",
+                    0.4478
+                ],
+                [
+                    "aniongap_min",
+                    0.2786
+                ],
+                [
+                    "pao2fio2ratio_min",
+                    0.2278
+                ],
+                [
+                    "wbc_max",
+                    0.1479
+                ],
+                [
+                    "lactate_max",
+                    0.1442
+                ],
+                [
+                    "albumin_min",
+                    0.1314
+                ],
+                [
+                    "bun_min",
+                    0.0902
+                ],
+                [
+                    "ph_min",
+                    0.0855
+                ],
+                [
+                    "alp_min",
+                    0.0854
+                ],
+                [
+                    "rdw_max",
+                    0.0808
+                ]
+            ]
+        }
+    }
+}

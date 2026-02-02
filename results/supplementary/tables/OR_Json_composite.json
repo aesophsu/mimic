@@ -1,0 +1,98 @@
+[
+    {
+        "Feature":"spo2_max",
+        "OR":1.4099382351,
+        "OR_Lower":0.6442324331,
+        "OR_Upper":1.3868939761,
+        "Coef":0.3435458986,
+        "display_name":"SpO2 (max)"
+    },
+    {
+        "Feature":"gender",
+        "OR":0.8736795839,
+        "OR_Lower":0.7922604489,
+        "OR_Upper":1.7140503077,
+        "Coef":-0.1350415793,
+        "display_name":"Sex"
+    },
+    {
+        "Feature":"aniongap_min",
+        "OR":1.3650250224,
+        "OR_Lower":0.861693014,
+        "OR_Upper":2.6244380927,
+        "Coef":0.3111727599,
+        "display_name":"AG (min)"
+    },
+    {
+        "Feature":"lactate_max",
+        "OR":1.0811284497,
+        "OR_Lower":0.7279102806,
+        "OR_Upper":1.8381980641,
+        "Coef":0.0780053565,
+        "display_name":"Lac (max)"
+    },
+    {
+        "Feature":"wbc_max",
+        "OR":1.3137650201,
+        "OR_Lower":0.8537371718,
+        "OR_Upper":2.0176037081,
+        "Coef":0.2728970762,
+        "display_name":"WBC (max)"
+    },
+    {
+        "Feature":"bun_min",
+        "OR":1.3135874672,
+        "OR_Lower":0.8357629112,
+        "OR_Upper":2.5708646381,
+        "Coef":0.2727619189,
+        "display_name":"BUN (min)"
+    },
+    {
+        "Feature":"alp_min",
+        "OR":0.729826363,
+        "OR_Lower":0.6479644368,
+        "OR_Upper":1.4398615017,
+        "Coef":-0.3149486321,
+        "display_name":"ALP (min)"
+    },
+    {
+        "Feature":"rdw_max",
+        "OR":1.4742194198,
+        "OR_Lower":0.9151269762,
+        "OR_Upper":2.1961121969,
+        "Coef":0.3881286428,
+        "display_name":"RDW (max)"
+    },
+    {
+        "Feature":"ph_min",
+        "OR":0.7088030265,
+        "OR_Lower":0.2437901178,
+        "OR_Upper":0.7032725446,
+        "Coef":-0.3441776098,
+        "display_name":"pH (min)"
+    },
+    {
+        "Feature":"albumin_min",
+        "OR":0.5777977676,
+        "OR_Lower":0.319865783,
+        "OR_Upper":0.8923609409,
+        "Coef":-0.5485313545,
+        "display_name":"Alb (min)"
+    },
+    {
+        "Feature":"creatinine_max",
+        "OR":1.4699068349,
+        "OR_Lower":1.0408362489,
+        "OR_Upper":3.4761874121,
+        "Coef":0.3851990212,
+        "display_name":"Creat (max)"
+    },
+    {
+        "Feature":"pao2fio2ratio_min",
+        "OR":0.4353263106,
+        "OR_Lower":0.2822533495,
+        "OR_Upper":0.9238800279,
+        "Coef":-0.8316593898,
+        "display_name":"P\/F (min)"
+    }
+]

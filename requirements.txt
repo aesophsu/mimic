@@ -1,0 +1,15 @@
+# Mimic2eICU 项目依赖
+# 由 Nix 提供 Python/uv，uv pip install -r requirements.txt 安装
+
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+scipy
+joblib
+shap
+dcurves
+xgboost
+optuna
+tableone

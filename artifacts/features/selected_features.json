@@ -1,0 +1,101 @@
+{
+    "pof": {
+        "n_features": 12,
+        "features": [
+            "rdw_max",
+            "ph_max",
+            "albumin_min",
+            "sodium_min",
+            "wbc_max",
+            "spo2_max",
+            "gender",
+            "albumin_max",
+            "alp_min",
+            "ph_min",
+            "creatinine_max",
+            "pao2fio2ratio_min"
+        ],
+        "weights": {
+            "rdw_max": 0.0954,
+            "ph_max": 0.0957,
+            "albumin_min": -0.1008,
+            "sodium_min": 0.1011,
+            "wbc_max": 0.1502,
+            "spo2_max": 0.1866,
+            "gender": -0.2155,
+            "albumin_max": -0.2225,
+            "alp_min": -0.2995,
+            "ph_min": -0.3689,
+            "creatinine_max": 0.5871,
+            "pao2fio2ratio_min": -0.6013
+        },
+        "best_C": 0.08111308307896872,
+        "best_lambda": 12.32846739442066
+    },
+    "mortality": {
+        "n_features": 12,
+        "features": [
+            "admission_age",
+            "wbc_min",
+            "wbc_max",
+            "albumin_min",
+            "albumin_max",
+            "bun_max",
+            "ptt_min",
+            "rdw_max",
+            "lactate_max",
+            "spo2_slope",
+            "pao2fio2ratio_min",
+            "tbar"
+        ],
+        "weights": {
+            "admission_age": 0.2629,
+            "wbc_min": 0.0518,
+            "wbc_max": 0.0537,
+            "albumin_min": -0.0756,
+            "albumin_max": -0.0206,
+            "bun_max": 0.289,
+            "ptt_min": 0.2076,
+            "rdw_max": 0.256,
+            "lactate_max": 0.1771,
+            "spo2_slope": 0.0405,
+            "pao2fio2ratio_min": -0.0928,
+            "tbar": 0.1269
+        },
+        "best_C": 0.03853528593710531,
+        "best_lambda": 25.950242113997348
+    },
+    "composite": {
+        "n_features": 12,
+        "features": [
+            "spo2_max",
+            "gender",
+            "aniongap_min",
+            "lactate_max",
+            "wbc_max",
+            "bun_min",
+            "alp_min",
+            "rdw_max",
+            "ph_min",
+            "albumin_min",
+            "creatinine_max",
+            "pao2fio2ratio_min"
+        ],
+        "weights": {
+            "spo2_max": 0.1033,
+            "gender": -0.1082,
+            "aniongap_min": 0.1113,
+            "lactate_max": 0.1324,
+            "wbc_max": 0.1905,
+            "bun_min": 0.193,
+            "alp_min": -0.2046,
+            "rdw_max": 0.2414,
+            "ph_min": -0.2843,
+            "albumin_min": -0.3342,
+            "creatinine_max": 0.3976,
+            "pao2fio2ratio_min": -0.5775
+        },
+        "best_C": 0.06734150657750829,
+        "best_lambda": 14.849682622544634
+    }
+}

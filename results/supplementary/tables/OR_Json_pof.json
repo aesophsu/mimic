@@ -1,0 +1,98 @@
+[
+    {
+        "Feature":"rdw_max",
+        "OR":1.2146060577,
+        "OR_Lower":0.686643283,
+        "OR_Upper":1.6627733693,
+        "Coef":0.1944197918,
+        "display_name":"RDW (max)"
+    },
+    {
+        "Feature":"ph_max",
+        "OR":1.3569542605,
+        "OR_Lower":0.7272620767,
+        "OR_Upper":2.0247322847,
+        "Coef":0.3052426739,
+        "display_name":"pH (max)"
+    },
+    {
+        "Feature":"albumin_min",
+        "OR":1.037338343,
+        "OR_Lower":0.5091305578,
+        "OR_Upper":2.2297026097,
+        "Coef":0.036658147,
+        "display_name":"Alb (min)"
+    },
+    {
+        "Feature":"sodium_min",
+        "OR":1.2620751964,
+        "OR_Lower":0.560620183,
+        "OR_Upper":1.4781445606,
+        "Coef":0.2327573475,
+        "display_name":"Na (min)"
+    },
+    {
+        "Feature":"wbc_max",
+        "OR":1.2599425116,
+        "OR_Lower":0.7457872081,
+        "OR_Upper":1.7580329673,
+        "Coef":0.2310660942,
+        "display_name":"WBC (max)"
+    },
+    {
+        "Feature":"spo2_max",
+        "OR":1.554271104,
+        "OR_Lower":0.8344023784,
+        "OR_Upper":1.9394740323,
+        "Coef":0.4410066923,
+        "display_name":"SpO2 (max)"
+    },
+    {
+        "Feature":"gender",
+        "OR":0.84840369,
+        "OR_Lower":0.6187977298,
+        "OR_Upper":1.3304916332,
+        "Coef":-0.1643987069,
+        "display_name":"Sex"
+    },
+    {
+        "Feature":"albumin_max",
+        "OR":0.5673008942,
+        "OR_Lower":0.3680572433,
+        "OR_Upper":1.3150292899,
+        "Coef":-0.5668654384,
+        "display_name":"Alb (max)"
+    },
+    {
+        "Feature":"alp_min",
+        "OR":0.6876971481,
+        "OR_Lower":0.7032760818,
+        "OR_Upper":1.4405609653,
+        "Coef":-0.3744067297,
+        "display_name":"ALP (min)"
+    },
+    {
+        "Feature":"ph_min",
+        "OR":0.5606193104,
+        "OR_Lower":0.2862226431,
+        "OR_Upper":0.7781109089,
+        "Coef":-0.5787131949,
+        "display_name":"pH (min)"
+    },
+    {
+        "Feature":"creatinine_max",
+        "OR":2.2303211411,
+        "OR_Lower":2.0717989396,
+        "OR_Upper":5.1654601373,
+        "Coef":0.8021455846,
+        "display_name":"Creat (max)"
+    },
+    {
+        "Feature":"pao2fio2ratio_min",
+        "OR":0.4428873021,
+        "OR_Lower":0.209635266,
+        "OR_Upper":0.8758314554,
+        "Coef":-0.8144399383,
+        "display_name":"P\/F (min)"
+    }
+]

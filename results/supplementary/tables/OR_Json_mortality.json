@@ -1,0 +1,98 @@
+[
+    {
+        "Feature":"admission_age",
+        "OR":2.2009973164,
+        "OR_Lower":0.5864605886,
+        "OR_Upper":2.3045657061,
+        "Coef":0.7889105833,
+        "display_name":"Age"
+    },
+    {
+        "Feature":"wbc_min",
+        "OR":1.5319002237,
+        "OR_Lower":1.4597861819,
+        "OR_Upper":7.3705968011,
+        "Coef":0.4265089411,
+        "display_name":"WBC (min)"
+    },
+    {
+        "Feature":"wbc_max",
+        "OR":0.7796659599,
+        "OR_Lower":0.2473373301,
+        "OR_Upper":1.7385617455,
+        "Coef":-0.2488897076,
+        "display_name":"WBC (max)"
+    },
+    {
+        "Feature":"albumin_min",
+        "OR":0.9804682472,
+        "OR_Lower":0.5824257192,
+        "OR_Upper":3.0605918289,
+        "Coef":-0.0197250182,
+        "display_name":"Alb (min)"
+    },
+    {
+        "Feature":"albumin_max",
+        "OR":0.7572153511,
+        "OR_Lower":0.2818457094,
+        "OR_Upper":1.4972306275,
+        "Coef":-0.2781075864,
+        "display_name":"Alb (max)"
+    },
+    {
+        "Feature":"bun_max",
+        "OR":1.8978008367,
+        "OR_Lower":1.0275731156,
+        "OR_Upper":2.9196112625,
+        "Coef":0.6406957615,
+        "display_name":"BUN (max)"
+    },
+    {
+        "Feature":"ptt_min",
+        "OR":1.3611151482,
+        "OR_Lower":0.9862813155,
+        "OR_Upper":3.027516797,
+        "Coef":0.3083043257,
+        "display_name":"PTT (min)"
+    },
+    {
+        "Feature":"rdw_max",
+        "OR":1.8705593568,
+        "OR_Lower":1.1601576718,
+        "OR_Upper":3.3172566653,
+        "Coef":0.6262375074,
+        "display_name":"RDW (max)"
+    },
+    {
+        "Feature":"lactate_max",
+        "OR":1.6434498036,
+        "OR_Lower":1.1950479892,
+        "OR_Upper":3.4329309349,
+        "Coef":0.4967975713,
+        "display_name":"Lac (max)"
+    },
+    {
+        "Feature":"spo2_slope",
+        "OR":1.1233534971,
+        "OR_Lower":0.9671105703,
+        "OR_Upper":4.3757022966,
+        "Coef":0.1163184055,
+        "display_name":"SpO2 slope"
+    },
+    {
+        "Feature":"pao2fio2ratio_min",
+        "OR":0.5213751183,
+        "OR_Lower":0.4499501791,
+        "OR_Upper":1.6676052201,
+        "Coef":-0.6512854996,
+        "display_name":"P\/F (min)"
+    },
+    {
+        "Feature":"tbar",
+        "OR":1.0468075378,
+        "OR_Lower":0.5287007937,
+        "OR_Upper":1.7572902451,
+        "Coef":0.0457450925,
+        "display_name":"TBAR"
+    }
+]
