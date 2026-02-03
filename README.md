@@ -162,6 +162,8 @@ uv run python run_all.py --mimic-only   # 仅 MIMIC 阶段 (01-07)
 uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 ```
 
+**运行日志**：脚本通过 `utils.logger` 同时输出到控制台和日志文件。默认路径为 `logs/run.log`（追加写入）；可通过环境变量 `MIMIC_LOG_FILE` 指定其他路径，例如 `export MIMIC_LOG_FILE=/tmp/mimic_run.log`。
+
 ### 4.3 分步运行顺序
 
 | 阶段 | 步骤 | 命令 |

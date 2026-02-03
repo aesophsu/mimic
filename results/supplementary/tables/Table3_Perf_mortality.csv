@@ -1,11 +1,11 @@
 Threshold,TP,FP,TN,FN,Sensitivity,Specificity,PPV,NPV,F1_Score,Accuracy,Algorithm,Group,Outcome,AUC,Subgroup_Specific_Th
-0.2164,30,36,145,8,0.7895,0.8011,0.4545,0.9477,0.5769,0.7991,XGBoost,Full Population,mortality,0.8619,
-0.2164,3,14,99,5,0.375,0.8761,0.1765,0.9519,0.24,0.843,XGBoost,Subgroup (Non-Renal),mortality,0.7428,0.0852
-0.1426,34,56,125,4,0.8947,0.6906,0.3778,0.969,0.5312,0.726,Random Forest,Full Population,mortality,0.8625,
-0.1426,4,21,92,4,0.5,0.8142,0.16,0.9583,0.2424,0.7934,Random Forest,Subgroup (Non-Renal),mortality,0.7362,0.0583
-0.1389,35,51,130,3,0.9211,0.7182,0.407,0.9774,0.5645,0.7534,SVM,Full Population,mortality,0.8636,
-0.1389,6,18,95,2,0.75,0.8407,0.25,0.9794,0.375,0.8347,SVM,Subgroup (Non-Renal),mortality,0.7887,0.1389
-0.1883,27,38,143,11,0.7105,0.7901,0.4154,0.9286,0.5243,0.7763,Decision Tree,Full Population,mortality,0.7921,
-0.1883,3,16,97,5,0.375,0.8584,0.1579,0.951,0.2222,0.8264,Decision Tree,Subgroup (Non-Renal),mortality,0.6305,0.1628
+0.3249,27,23,158,11,0.7105,0.8729,0.54,0.9349,0.6136,0.8447,XGBoost,Full Population,mortality,0.8602,
+0.3249,3,8,105,5,0.375,0.9292,0.2727,0.9545,0.3158,0.8926,XGBoost,Subgroup (Non-Renal),mortality,0.7489,0.0754
+0.2557,28,28,153,10,0.7368,0.8453,0.5,0.9387,0.5957,0.8265,Random Forest,Full Population,mortality,0.8615,
+0.2557,3,10,103,5,0.375,0.9115,0.2308,0.9537,0.2857,0.876,Random Forest,Subgroup (Non-Renal),mortality,0.7345,0.0591
+0.1327,35,56,125,3,0.9211,0.6906,0.3846,0.9766,0.5426,0.7306,SVM,Full Population,mortality,0.8628,
+0.1327,6,21,92,2,0.75,0.8142,0.2222,0.9787,0.3429,0.8099,SVM,Subgroup (Non-Renal),mortality,0.7832,0.1391
+0.2054,27,39,142,11,0.7105,0.7845,0.4091,0.9281,0.5192,0.7717,Decision Tree,Full Population,mortality,0.7907,
+0.2054,3,16,97,5,0.375,0.8584,0.1579,0.951,0.2222,0.8264,Decision Tree,Subgroup (Non-Renal),mortality,0.656,0.1287
 0.2218,30,30,151,8,0.7895,0.8343,0.5,0.9497,0.6122,0.8265,Logistic Regression,Full Population,mortality,0.8761,
 0.2218,4,11,102,4,0.5,0.9027,0.2667,0.9623,0.3478,0.876,Logistic Regression,Subgroup (Non-Renal),mortality,0.8042,0.1178

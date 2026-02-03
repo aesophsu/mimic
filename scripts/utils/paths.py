@@ -105,6 +105,11 @@ def get_validation_dir() -> str:
     return os.path.join(_PROJECT_ROOT, "validation")
 
 
+def get_log_file() -> str:
+    """运行日志文件路径，默认 logs/run.log（可通过环境变量 MIMIC_LOG_FILE 覆盖）"""
+    return os.environ.get("MIMIC_LOG_FILE", os.path.join(_PROJECT_ROOT, "logs", "run.log"))
+
+
 def ensure_dirs(*paths: str) -> None:
     """确保目录存在"""
     for p in paths:
