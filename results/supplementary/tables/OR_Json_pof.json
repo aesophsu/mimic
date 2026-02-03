@@ -1,98 +1,98 @@
 [
     {
-        "Feature":"rdw_max",
-        "OR":1.2146060577,
-        "OR_Lower":0.686643283,
-        "OR_Upper":1.6627733693,
-        "Coef":0.1944197918,
-        "display_name":"RDW (max)"
-    },
-    {
-        "Feature":"ph_max",
-        "OR":1.3569542605,
-        "OR_Lower":0.7272620767,
-        "OR_Upper":2.0247322847,
-        "Coef":0.3052426739,
-        "display_name":"pH (max)"
-    },
-    {
-        "Feature":"albumin_min",
-        "OR":1.037338343,
-        "OR_Lower":0.5091305578,
-        "OR_Upper":2.2297026097,
-        "Coef":0.036658147,
-        "display_name":"Alb (min)"
-    },
-    {
-        "Feature":"sodium_min",
-        "OR":1.2620751964,
-        "OR_Lower":0.560620183,
-        "OR_Upper":1.4781445606,
-        "Coef":0.2327573475,
-        "display_name":"Na (min)"
-    },
-    {
         "Feature":"wbc_max",
-        "OR":1.2599425116,
-        "OR_Lower":0.7457872081,
-        "OR_Upper":1.7580329673,
-        "Coef":0.2310660942,
+        "OR":1.285546724,
+        "OR_Lower":0.7360842617,
+        "OR_Upper":1.5695862853,
+        "Coef":0.251184094,
         "display_name":"WBC (max)"
     },
     {
-        "Feature":"spo2_max",
-        "OR":1.554271104,
-        "OR_Lower":0.8344023784,
-        "OR_Upper":1.9394740323,
-        "Coef":0.4410066923,
-        "display_name":"SpO2 (max)"
-    },
-    {
-        "Feature":"gender",
-        "OR":0.84840369,
-        "OR_Lower":0.6187977298,
-        "OR_Upper":1.3304916332,
-        "Coef":-0.1643987069,
-        "display_name":"Sex"
+        "Feature":"albumin_min",
+        "OR":0.7425225189,
+        "OR_Lower":0.4465739431,
+        "OR_Upper":2.0646284576,
+        "Coef":-0.2977020803,
+        "display_name":"Alb (min)"
     },
     {
         "Feature":"albumin_max",
-        "OR":0.5673008942,
-        "OR_Lower":0.3680572433,
-        "OR_Upper":1.3150292899,
-        "Coef":-0.5668654384,
+        "OR":0.81041752,
+        "OR_Lower":0.3568290766,
+        "OR_Upper":1.4901273048,
+        "Coef":-0.2102057074,
         "display_name":"Alb (max)"
     },
     {
-        "Feature":"alp_min",
-        "OR":0.6876971481,
-        "OR_Lower":0.7032760818,
-        "OR_Upper":1.4405609653,
-        "Coef":-0.3744067297,
-        "display_name":"ALP (min)"
-    },
-    {
-        "Feature":"ph_min",
-        "OR":0.5606193104,
-        "OR_Lower":0.2862226431,
-        "OR_Upper":0.7781109089,
-        "Coef":-0.5787131949,
-        "display_name":"pH (min)"
+        "Feature":"bun_min",
+        "OR":1.2308628442,
+        "OR_Lower":0.5451426708,
+        "OR_Upper":1.5471227338,
+        "Coef":0.2077154228,
+        "display_name":"BUN (min)"
     },
     {
         "Feature":"creatinine_max",
-        "OR":2.2303211411,
-        "OR_Lower":2.0717989396,
-        "OR_Upper":5.1654601373,
-        "Coef":0.8021455846,
+        "OR":1.7545766285,
+        "OR_Lower":1.2919590966,
+        "OR_Upper":3.8259319211,
+        "Coef":0.5622275905,
         "display_name":"Creat (max)"
     },
     {
+        "Feature":"alp_min",
+        "OR":0.6539538125,
+        "OR_Lower":0.4893265351,
+        "OR_Upper":1.0381307995,
+        "Coef":-0.4247185531,
+        "display_name":"ALP (min)"
+    },
+    {
+        "Feature":"phosphate_min",
+        "OR":1.1222233858,
+        "OR_Lower":0.702515825,
+        "OR_Upper":2.1747605431,
+        "Coef":0.1153118834,
+        "display_name":"Phos (min)"
+    },
+    {
+        "Feature":"lactate_max",
+        "OR":1.0707902133,
+        "OR_Lower":0.6899290407,
+        "OR_Upper":1.5543035445,
+        "Coef":0.068396893,
+        "display_name":"Lac (max)"
+    },
+    {
+        "Feature":"spo2_max",
+        "OR":1.4331438332,
+        "OR_Lower":1.0221644052,
+        "OR_Upper":2.1865572241,
+        "Coef":0.3598705159,
+        "display_name":"SpO2 (max)"
+    },
+    {
+        "Feature":"spo2_slope",
+        "OR":1.0311935413,
+        "OR_Lower":0.5618401738,
+        "OR_Upper":1.268727029,
+        "Coef":0.0307169093,
+        "display_name":"SpO2 slope"
+    },
+    {
+        "Feature":"ph_min",
+        "OR":0.6521754552,
+        "OR_Lower":0.33969964,
+        "OR_Upper":0.8277092472,
+        "Coef":-0.4274416502,
+        "display_name":"pH (min)"
+    },
+    {
         "Feature":"pao2fio2ratio_min",
-        "OR":0.4428873021,
-        "OR_Lower":0.209635266,
-        "OR_Upper":0.8758314554,
-        "Coef":-0.8144399383,
+        "OR":0.5009029473,
+        "OR_Lower":0.2465354716,
+        "OR_Upper":0.7293254957,
+        "Coef":-0.6913429146,
         "display_name":"P\/F (min)"
     }
 ]

@@ -1,98 +1,98 @@
 [
     {
-        "Feature":"admission_age",
-        "OR":2.2009973164,
-        "OR_Lower":0.5864605886,
-        "OR_Upper":2.3045657061,
-        "Coef":0.7889105833,
-        "display_name":"Age"
+        "Feature":"glucose_min",
+        "OR":1.3260286157,
+        "OR_Lower":0.4164586144,
+        "OR_Upper":1.4124915113,
+        "Coef":0.282188472,
+        "display_name":"Glu (min)"
     },
     {
-        "Feature":"wbc_min",
-        "OR":1.5319002237,
-        "OR_Lower":1.4597861819,
-        "OR_Upper":7.3705968011,
-        "Coef":0.4265089411,
-        "display_name":"WBC (min)"
-    },
-    {
-        "Feature":"wbc_max",
-        "OR":0.7796659599,
-        "OR_Lower":0.2473373301,
-        "OR_Upper":1.7385617455,
-        "Coef":-0.2488897076,
-        "display_name":"WBC (max)"
-    },
-    {
-        "Feature":"albumin_min",
-        "OR":0.9804682472,
-        "OR_Lower":0.5824257192,
-        "OR_Upper":3.0605918289,
-        "Coef":-0.0197250182,
-        "display_name":"Alb (min)"
+        "Feature":"malignant_tumor",
+        "OR":1.7364436871,
+        "OR_Lower":0.4984738393,
+        "OR_Upper":2.4728361169,
+        "Coef":0.5518391637,
+        "display_name":"Malignancy"
     },
     {
         "Feature":"albumin_max",
-        "OR":0.7572153511,
-        "OR_Lower":0.2818457094,
-        "OR_Upper":1.4972306275,
-        "Coef":-0.2781075864,
+        "OR":0.6794984195,
+        "OR_Lower":0.3772455641,
+        "OR_Upper":1.0990211386,
+        "Coef":-0.3864003713,
         "display_name":"Alb (max)"
     },
     {
-        "Feature":"bun_max",
-        "OR":1.8978008367,
-        "OR_Lower":1.0275731156,
-        "OR_Upper":2.9196112625,
-        "Coef":0.6406957615,
-        "display_name":"BUN (max)"
+        "Feature":"tbar",
+        "OR":1.4333917111,
+        "OR_Lower":0.8616211902,
+        "OR_Upper":2.9541439706,
+        "Coef":0.3600434619,
+        "display_name":"TBAR"
     },
     {
-        "Feature":"ptt_min",
-        "OR":1.3611151482,
-        "OR_Lower":0.9862813155,
-        "OR_Upper":3.027516797,
-        "Coef":0.3083043257,
-        "display_name":"PTT (min)"
-    },
-    {
-        "Feature":"rdw_max",
-        "OR":1.8705593568,
-        "OR_Lower":1.1601576718,
-        "OR_Upper":3.3172566653,
-        "Coef":0.6262375074,
-        "display_name":"RDW (max)"
-    },
-    {
-        "Feature":"lactate_max",
-        "OR":1.6434498036,
-        "OR_Lower":1.1950479892,
-        "OR_Upper":3.4329309349,
-        "Coef":0.4967975713,
-        "display_name":"Lac (max)"
-    },
-    {
-        "Feature":"spo2_slope",
-        "OR":1.1233534971,
-        "OR_Lower":0.9671105703,
-        "OR_Upper":4.3757022966,
-        "Coef":0.1163184055,
-        "display_name":"SpO2 slope"
+        "Feature":"spo2_min",
+        "OR":0.9162203328,
+        "OR_Lower":0.3842322308,
+        "OR_Upper":1.3853125009,
+        "Coef":-0.0874984052,
+        "display_name":"SpO2 (min)"
     },
     {
         "Feature":"pao2fio2ratio_min",
-        "OR":0.5213751183,
-        "OR_Lower":0.4499501791,
-        "OR_Upper":1.6676052201,
-        "Coef":-0.6512854996,
+        "OR":0.6113635936,
+        "OR_Lower":0.5247425059,
+        "OR_Upper":1.4482951066,
+        "Coef":-0.4920634173,
         "display_name":"P\/F (min)"
     },
     {
-        "Feature":"tbar",
-        "OR":1.0468075378,
-        "OR_Lower":0.5287007937,
-        "OR_Upper":1.7572902451,
-        "Coef":0.0457450925,
-        "display_name":"TBAR"
+        "Feature":"wbc_min",
+        "OR":1.4746554997,
+        "OR_Lower":1.2045846986,
+        "OR_Upper":3.2303162553,
+        "Coef":0.388424403,
+        "display_name":"WBC (min)"
+    },
+    {
+        "Feature":"hemoglobin_min",
+        "OR":0.6299100358,
+        "OR_Lower":0.8437943485,
+        "OR_Upper":2.6081877043,
+        "Coef":-0.4621782701,
+        "display_name":"Hgb (min)"
+    },
+    {
+        "Feature":"lactate_max",
+        "OR":1.5006121826,
+        "OR_Lower":1.210209681,
+        "OR_Upper":4.2663446352,
+        "Coef":0.4058731466,
+        "display_name":"Lac (max)"
+    },
+    {
+        "Feature":"ptt_min",
+        "OR":1.4137041981,
+        "OR_Lower":1.1710721884,
+        "OR_Upper":3.5161749601,
+        "Coef":0.3462133505,
+        "display_name":"PTT (min)"
+    },
+    {
+        "Feature":"bun_max",
+        "OR":2.0469256271,
+        "OR_Lower":1.1178191651,
+        "OR_Upper":4.66970282,
+        "Coef":0.7163389734,
+        "display_name":"BUN (max)"
+    },
+    {
+        "Feature":"admission_age",
+        "OR":1.9625497142,
+        "OR_Lower":0.9231491299,
+        "OR_Upper":3.9495125954,
+        "Coef":0.6742445024,
+        "display_name":"Age"
     }
 ]
