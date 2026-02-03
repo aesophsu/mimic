@@ -16,7 +16,7 @@ SELECT
 FROM temp_ap_patients;
 
 --------------------------------------------------------------------------------
--- 2. Core cohort base (Optimized for First AP Admission)
+-- 2. Core cohort base (先 LOS>=1 天，再首次 ICU 入住的 AP 队列)
 --------------------------------------------------------------------------------
 DROP TABLE IF EXISTS cohort_base;
 CREATE TEMP TABLE cohort_base AS

@@ -17,13 +17,16 @@
 
 ## 1. 队列纳入标准
 
+纳入顺序在两库中均采用 **先 LOS 再首次** 的临床逻辑：先剔除 ICU 住院时间 <24 小时的入住，再在剩余入住中保留每位患者的首次 ICU 入住；随后应用年龄与缺失率筛选。
+
 | 项目 | MIMIC | eICU | 对齐状态 |
 |------|-------|------|----------|
 | AP 诊断 | ICD-9 5770, ICD-10 K85% | diagnosisstring ILIKE '%pancreatit%' NOT '%chronic%' | 近似（eICU 无 ICD，用文本） |
 | 年龄 | ≥18 | ≥18 | ✅ |
-| ICU 时长 | los ≥ 1 day | icu_los_hours ≥ 24 | ✅ |
-| 首次住院 | ap_stay_seq = 1 | stay_rank = 1 | ✅ |
+| ICU 时长 | los ≥ 1 day（先按 LOS≥1 过滤 ICU 入住） | icu_los_hours ≥ 24（先按 LOS≥24 过滤 ICU 入住） | ✅（LOS 阈值等价） |
+| 首次住院 | 在 LOS≥1 的入住中按 `intime` 取 ap_stay_seq=1 | 在 LOS≥24h 的入住中按 admit/offset 取 stay_rank=1 | ✅（**先 LOS 再首次**） |
 | 体重/身高 | first_day_weight/height | admissionweight 30-300, height 120-250 | ✅ |
+| 关键生理指标缺失 | 10 项关键指标 >80% 缺失者剔除（SQL Step 4） | 同一 10 项指标 >80% 缺失或 POF 无法判定者剔除 | ✅（缺失率阈值与指标列表对齐） |
 
 ## 2. 时间窗口（关键对齐点）
 

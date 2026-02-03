@@ -30,7 +30,11 @@ LEFT JOIN mimiciv_derived.first_day_bg bg ON c.stay_id = bg.stay_id
 - **覆盖人群**：**仅在有 ABG 记录的患者** 有 P/F 值；无 ABG 者为 NULL
 - **选择偏倚**：ICU 中通常对病情较重者（如机械通气、呼吸窘迫）行 ABG，故 MIMIC 的 P/F 多来自病情更重人群
 
-### 2.2 eICU (`scripts/sql/08_eicu_extraction.sql` 第 272–304 行)
+### 2.2 eICU（历史逻辑 vs 现行逻辑）
+
+#### 2.2.1 旧版 eICU 提取逻辑（**已废弃**）
+
+旧版本 `08_eicu_extraction.sql` 中，在无 PaO2 时会使用 SpO2 回退：
 
 ```sql
 -- PaO2 可用时：pf_val = pao2 / FiO2
@@ -38,16 +42,48 @@ oxy_data: pao2 / (CASE WHEN fio2 IS NULL THEN 0.21 ... END)
 
 -- PaO2 不可用时：SpO2 回退
 vital_oxy: spo2 / (CASE WHEN b.fio2 IS NULL THEN 0.21 ... END)  -- sf_val
--- LEFT JOIN pivoted_bg b ON ... AND v.chartoffset = b.chartoffset
+-- ...
 
 -- 最终取值
 COALESCE(MIN(o.pf_val), MIN(v.sf_val) * 0.9) AS pao2fio2ratio_min
 ```
 
-- **数据源**：`eicu_derived.pivoted_bg`（PaO2）与 `pivoted_vital`（SpO2）
-- **回退逻辑**：若无 PaO2，则用 **SpO2/FiO2 × 0.9** 近似
-- **FiO2 默认**：FiO2 为 NULL 时按 **0.21（室内空气）** 处理
-- **vital_oxy 的 JOIN**：SpO2 与 FiO2 按 `chartoffset` 精确匹配；无匹配时 `b.fio2 IS NULL` → 0.21
+- **数据源**：`eicu_derived.pivoted_bg`（PaO2）与 `pivoted_vital`（SpO2）  
+- **回退逻辑**：若无 PaO2，则用 **SpO2/FiO2 × 0.9** 近似  
+- **FiO2 默认**：FiO2 为 NULL 时按 **0.21（室内空气）** 处理  
+- 该逻辑正是导致 eICU P/F 系统性高估的根因（见第三节分析），**已在当前版本中移除**。
+
+#### 2.2.2 现行 eICU 提取逻辑（**与 MIMIC 对齐，仅使用 PaO2**）
+
+当前版本 `scripts/sql/08_eicu_extraction.sql` 中，P/F 比仅来源于 PaO2：
+
+```sql
+-- P/F ratio: 与 MIMIC 对齐逻辑（仅使用真实 PaO2）
+DROP TABLE IF EXISTS temp_respiratory_support;
+CREATE TEMP TABLE temp_respiratory_support AS
+WITH oxy_data AS (
+    SELECT 
+        patientunitstayid,
+        pao2 / (CASE WHEN fio2 IS NULL THEN 0.21 
+                     WHEN fio2 >= 21 THEN fio2/100.0 
+                     ELSE 0.21 END) AS pf_val
+    FROM eicu_derived.pivoted_bg 
+    WHERE pao2 > 0 AND chartoffset BETWEEN 0 AND 1440
+      AND patientunitstayid IN (SELECT patientunitstayid FROM cohort_base)
+)
+SELECT 
+    c.patientunitstayid,
+    MIN(o.pf_val) AS pao2fio2ratio_min,
+    MAX(o.pf_val) AS pao2fio2ratio_max
+FROM cohort_base c
+LEFT JOIN oxy_data o ON c.patientunitstayid = o.patientunitstayid
+GROUP BY c.patientunitstayid;
+```
+
+- **数据源**：仅 `eicu_derived.pivoted_bg`（动脉血气 PaO2）  
+- **FiO2 处理**：FiO2 ≥21 视为 21–100% 百分数，除以 100；缺失或 <21 时按 0.21 处理  
+- **无 PaO2 者**：`pao2fio2ratio_min` / `_max` 记为 **NULL**，不使用 SpO2 回退  
+- **时间窗**：`chartoffset` 0–1440 分钟，对应 ICU 入室后 0–24 小时，与 MIMIC 的 `first_day_bg` 对齐  
 
 ---
 
