@@ -17,7 +17,7 @@
 
 ## 输出位置与结论
 
-- `03_table1_baseline.py` 的主输出为：`results/main/tables/Table1_baseline.csv`，与主文 Table 1 一一对应。
+- `03_table1_baseline.py` 的主输出为：`results/main/tables/Table1_baseline.csv`，与主文 Table 1 一一对应。（历史产出见 `results/archive/main/tables/`。）
 - **完整 Table 1**（含 eICU 外部验证列）必须在 **08 运行之后** 才能生成。
 - **MIMIC-only Table 1** 可在 01 之后独立生成（仅含 MIMIC 列，用于早期探索）。
 - `run_all.py` 已按上述逻辑安排 03 的执行顺序，无需手动调整。
