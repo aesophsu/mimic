@@ -6,9 +6,9 @@
 
 ## 一、研究概要
 
-### 1.1 标题（建议）
+### 1.1 标题
 
-**Development and External Validation of Machine Learning Models for Predicting Persistent Organ Failure and Mortality in Severe Acute Pancreatitis: A Multicenter Cohort Study**
+**Early Prediction of Persistent Organ Failure in Patients with Acute Pancreatitis: A Multicenter Development and External Validation Study**
 
 ### 1.2 结构化摘要（Structured Abstract）
 
