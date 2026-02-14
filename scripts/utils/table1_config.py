@@ -71,7 +71,7 @@ TABLE1_DISPLAY_OVERRIDES = {
     "potassium_max": "Potassium",
     "lactate_max": "Lactate",
     "pof": "POF",
-    "mortality": "28-day death",
+    "mortality": "28-day mortality",
 }
 
 # 单位标注（与 feature_dictionary 一致，用于 Table 1 列名）
@@ -112,7 +112,7 @@ BINARY_SHOW_POSITIVE_ONLY = [
     "mechanical_vent_flag",  # Mechanical ventilation
     "vaso_flag",  # Vasopressors
     "pof",  # POF
-    "mortality",  # 28-day death
+    "mortality",  # 28-day mortality
 ]
 
 # 表格脚注（SCI 投稿规范）

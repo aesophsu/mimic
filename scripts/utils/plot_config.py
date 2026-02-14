@@ -10,8 +10,8 @@ FIG_WIDTH_DOUBLE = 7.2   # 双栏 ~176mm (PLOS max 7.5in)
 FIG_WIDTH_LARGE = 10
 FIG_HEIGHT_MAX = 8.75   # PLOS/Nature 最大高度 (in)
 
-# DCA/校准组合图：双栏宽 × 适度高，宽高比 ~1.5:1 符合医学期刊审美
-FIG_DCA_FIGSIZE = (7.2, 4.8)
+# DCA/校准组合图：与外部校准曲线图统一尺寸（双栏 7.2in × 6in）
+FIG_DCA_FIGSIZE = (7.2, 6)
 
 FONT_FAMILY = 'sans-serif'
 FONT_SANS = ['Arial', 'Helvetica Neue', 'Helvetica', 'DejaVu Sans']

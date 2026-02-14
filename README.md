@@ -195,7 +195,7 @@ Figure 1 所需纳入排除人数由 `01_mimic_flowchart_counts.sql`、`08_eicu_
 
 ## 四、稿件图表对应
 
-**路径说明**：新运行产出写入 `results/main/` 与 `results/supplementary/`；历史产出已归档于 `results/archive/main/`、`results/archive/supplementary/`。
+**路径说明**：新运行产出写入 `results/main/` 与 `results/supplementary/`；历史产出已归档于 `results/archive/main/`、`results/archive/supplementary/`。Methods 与 Results 中文稿见 [docs/MANUSCRIPT_METHODS.md](docs/MANUSCRIPT_METHODS.md)、[docs/MANUSCRIPT_RESULTS.md](docs/MANUSCRIPT_RESULTS.md)；补充材料索引见 [results/MANIFEST.md](results/MANIFEST.md)。
 
 ### 4.1 主文表格（Main Text Tables）
 

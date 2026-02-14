@@ -108,6 +108,71 @@ def plot_performance(models, X_test, y_test, target, save_path, ci_stats=None):
     plt.close()
     _log(f"图片已保存: {os.path.abspath(save_path)}", "OK")
 
+
+def plot_calibration_by_subgroup(models, X_test, y_test, sub_mask, target, save_path):
+    """
+    按肾功能亚组 (subgroup_no_renal) 绘制校准曲线：
+    - Subgroup No Renal = 1: 肾功能良好人群
+    - Subgroup No Renal = 0: 其他人群
+    """
+    if sub_mask is None:
+        return
+    y_arr = np.asarray(y_test)
+    sub_arr = np.asarray(sub_mask).astype(bool)
+
+    # 两个子人群：1（无肾损害）、0（其他）
+    for grp in [1, 0]:
+        mask = sub_arr if grp == 1 else ~sub_arr
+        # 需要同时包含正负样本才能计算校准曲线
+        if mask.sum() < 10:
+            _log(f"子人群 subgroup_no_renal={grp} 样本量过少，跳过校准曲线绘制。", "WARN")
+            continue
+        y_sub = y_arr[mask]
+        if len(np.unique(y_sub)) < 2:
+            _log(f"子人群 subgroup_no_renal={grp} 仅有单一结局，跳过校准曲线绘制。", "WARN")
+            continue
+
+        apply_medical_style()
+        n_models = len(models)
+        colors = PALETTE_MAIN[:n_models] if n_models <= len(PALETTE_MAIN) else sns.color_palette("Set1", n_colors=n_models)
+
+        plt.figure(figsize=(FIG_WIDTH_DOUBLE, 6), dpi=300, facecolor='white')
+        ax = plt.gca()
+        for i, (name, clf) in enumerate(models.items()):
+            # 使用相同的测试集子集，保证与全人群结果一致可比
+            y_prob = clf.predict_proba(X_test)[mask, 1]
+            prob_true, prob_pred = calibration_curve(y_sub, y_prob, n_bins=10, strategy='uniform')
+            plt.plot(
+                prob_pred,
+                prob_true,
+                marker='s',
+                ms=5,
+                lw=2,
+                color=colors[i],
+                label=name,
+                alpha=0.9,
+            )
+
+        plt.plot([0, 1], [0, 1], color=COLOR_REF_LINE, linestyle=':', lw=1.5, label='Perfectly Calibrated')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        plt.xlabel("Predicted Probability", fontsize=LABEL_FONT, labelpad=10)
+        plt.ylabel("Actual Observed Probability", fontsize=LABEL_FONT, labelpad=10)
+        plt.title(
+            f"Calibration: {target.upper()} (Subgroup No Renal = {grp})",
+            fontsize=TITLE_FONT,
+            fontweight='bold',
+            pad=20,
+        )
+        plt.legend(loc="upper left", fontsize=10, frameon=False)
+        plt.grid(color='whitesmoke', linestyle='-', linewidth=1)
+        plt.tight_layout()
+
+        calib_base = os.path.join(save_path, f"{target}_Calibration_subgroupNoRenal_{grp}")
+        save_fig_medical(calib_base)
+        plt.close()
+        _log(f"子人群校准图已保存: {os.path.abspath(calib_base)}.png", "OK")
+
 def optimize_all_models(X_train, y_train):
     cv_strategy = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     best_models = {}
@@ -223,9 +288,15 @@ def save_model_assets(target, target_dir, models_dict, scaler, ci_stats, feature
     joblib.dump(scaler, os.path.join(target_dir, "scaler.pkl"))
     joblib.dump(ci_stats, os.path.join(target_dir, "bootstrap_ci_stats.pkl"))
     artifact_dir = get_artifact_path("scalers")
+    best_model = models_dict.get("XGBoost")
     deploy_bundle = {
-        'feature_names': list(features),
+        # 标准部署键（供 Streamlit/API 直接使用）
+        'best_model': best_model,
+        'features': list(features),
+        'imputer': None,
         'scaler': scaler,
+        # 兼容旧流程键（Step 08/10 仍依赖）
+        'feature_names': list(features),
         'target_outcome': target
     }
     for key, fname in [
@@ -243,6 +314,9 @@ def save_model_assets(target, target_dir, models_dict, scaler, ci_stats, feature
         if order is None:
             order = deploy_bundle.get('train_assets_bundle', {}).get('feature_order', [])
         deploy_bundle['imputer_feature_order'] = list(order) if order is not None else []
+    # 兼容可能按旧命名读取的客户端
+    deploy_bundle['Best Model'] = deploy_bundle['best_model']
+    deploy_bundle['Features'] = deploy_bundle['features']
     joblib.dump(deploy_bundle, os.path.join(target_dir, "deploy_bundle.pkl"))
     imp_list = []
     for name in ["XGBoost", "Random Forest", "Logistic Regression"]:
@@ -330,6 +404,8 @@ def run_model_training_flow():
         }
         joblib.dump(eval_bundle, os.path.join(target_model_dir, "eval_data.pkl"))
         plot_performance(calibrated_models, X_test_pre, y_test, target, target_fig_dir, ci_stats)
+        # 额外输出：按肾功能亚组 (subgroup_no_renal) 的校准曲线
+        plot_calibration_by_subgroup(calibrated_models, X_test_pre, y_test.values, sub_mask, target, target_fig_dir)
         global_performance.extend(summary_list)
 
     if global_performance:

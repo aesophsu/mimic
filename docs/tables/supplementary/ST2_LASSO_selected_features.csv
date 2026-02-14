@@ -1,0 +1,37 @@
+Outcome,Feature,Display_name,LASSO_Weight,Rank
+POF,wbc_max,WBC (max),0.101,1
+POF,albumin_min,Alb (min),-0.177,2
+POF,albumin_max,Alb (max),-0.142,3
+POF,bun_min,BUN (min),0.073,4
+POF,creatinine_max,Creat (max),0.522,5
+POF,alp_min,ALP (min),-0.111,6
+POF,phosphate_min,Phos (min),0.021,7
+POF,lactate_max,Lac (max),0.064,8
+POF,spo2_max,SpO2 (max),0.088,9
+POF,spo2_slope,SpO2 slope,0.035,10
+POF,ph_min,pH (min),-0.318,11
+POF,pao2fio2ratio_min,P/F (min),-0.461,12
+Mortality,glucose_min,Glu (min),0.114,1
+Mortality,malignant_tumor,Malignancy,0.117,2
+Mortality,albumin_max,Alb (max),-0.127,3
+Mortality,tbar,TBAR,0.140,4
+Mortality,spo2_min,SpO2 (min),-0.145,5
+Mortality,pao2fio2ratio_min,P/F (min),-0.176,6
+Mortality,wbc_min,WBC (min),0.203,7
+Mortality,hemoglobin_min,Hgb (min),-0.231,8
+Mortality,lactate_max,Lac (max),0.308,9
+Mortality,ptt_min,PTT (min),0.330,10
+Mortality,bun_max,BUN (max),0.357,11
+Mortality,admission_age,Age,0.458,12
+Composite,spo2_slope,SpO2 slope,0.017,1
+Composite,albumin_max,Alb (max),-0.017,2
+Composite,aniongap_min,AG (min),0.050,3
+Composite,hemoglobin_min,Hgb (min),-0.066,4
+Composite,ptt_min,PTT (min),0.067,5
+Composite,wbc_max,WBC (max),0.106,6
+Composite,lactate_max,Lac (max),0.138,7
+Composite,bun_min,BUN (min),0.238,8
+Composite,albumin_min,Alb (min),-0.267,9
+Composite,ph_min,pH (min),-0.273,10
+Composite,creatinine_max,Creat (max),0.353,11
+Composite,pao2fio2ratio_min,P/F (min),-0.428,12

@@ -1,8 +1,10 @@
 # Mimic2eICU 项目依赖
-# 由 Nix 提供 Python/uv，uv pip install -r requirements.txt 安装
+# 推荐：Nix 提供 Python/uv 后，在项目根目录执行 uv sync（见 pyproject.toml），再 uv run python scripts/...
+# 或：uv pip install -r requirements.txt 安装到当前环境
 
 numpy
 pandas
+streamlit
 matplotlib
 seaborn
 scikit-learn

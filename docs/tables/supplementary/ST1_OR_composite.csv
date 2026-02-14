@@ -1,0 +1,13 @@
+Feature,Display_name,OR,OR_95CI_Lower,OR_95CI_Upper,Coef
+spo2_slope,SpO2 slope,1.06,0.55,1.33,0.06
+albumin_max,Alb (max),0.92,0.41,1.74,-0.09
+aniongap_min,AG (min),1.15,0.72,1.75,0.14
+hemoglobin_min,Hgb (min),0.77,0.74,1.73,-0.27
+ptt_min,PTT (min),1.28,1.04,2.41,0.25
+wbc_max,WBC (max),1.41,0.78,1.77,0.34
+lactate_max,Lac (max),1.13,0.83,2.26,0.12
+bun_min,BUN (min),1.55,0.66,1.86,0.44
+albumin_min,Alb (min),0.71,0.30,1.62,-0.34
+ph_min,pH (min),0.59,0.26,0.79,-0.52
+creatinine_max,Creat (max),1.37,1.22,3.63,0.32
+pao2fio2ratio_min,P/F (min),0.52,0.27,0.83,-0.66
