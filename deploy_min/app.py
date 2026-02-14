@@ -21,7 +21,6 @@ FEATURE_DICT_PATH = os.path.join(ARTIFACTS_DIR, "features", "feature_dictionary.
 TABLE4_PATH = os.path.join(PROJECT_ROOT, "results", "main", "tables", "Table4_external_validation.csv")
 TRAIN_PATH = os.path.join(PROJECT_ROOT, "data", "cleaned", "mimic_train_processed.csv")
 TEST_PATH = os.path.join(PROJECT_ROOT, "data", "cleaned", "mimic_test_processed.csv")
-DYNAMIC_DATA_AVAILABLE = os.path.exists(TRAIN_PATH) and os.path.exists(TEST_PATH)
 
 TARGETS = {
     "POF（主要终点）": "pof",
@@ -132,7 +131,6 @@ I18N = {
         "dynamic_title": "Performance Retention vs Full-Feature Baseline",
         "dynamic_note": "Internal estimate from development data. This reflects model-level retention, not single-patient prediction certainty.",
         "dynamic_need_more": "Fill at least 2 model features to compute dynamic ratio.",
-        "dynamic_unavailable": "Dynamic retention is disabled in this deployment (development train/test files are not bundled).",
         "dynamic_subset": "Subset size",
         "dynamic_ratio_auc": "AUC ratio",
         "dynamic_ratio_acc": "Accuracy ratio",
@@ -223,7 +221,6 @@ I18N = {
         "dynamic_title": "性能保留率（相对全特征基线）",
         "dynamic_note": "基于开发集的内部估计。该指标反映模型层面的保留率，不代表单个病例预测确定性。",
         "dynamic_need_more": "至少填写2个模型特征后才可计算动态比值。",
-        "dynamic_unavailable": "当前部署未包含开发集训练/测试文件，动态保留率已禁用。",
         "dynamic_subset": "子集特征数",
         "dynamic_ratio_auc": "AUC 比值",
         "dynamic_ratio_acc": "准确率比值",
@@ -1008,8 +1005,6 @@ def _extract_xgb_params(bundle: dict[str, Any]) -> dict[str, Any]:
 
 @st.cache_data
 def dynamic_subset_vs_full(target: str, selected_features: tuple[str, ...]) -> dict[str, float]:
-    if not DYNAMIC_DATA_AVAILABLE:
-        return {}
     if len(selected_features) < 2:
         return {}
 
@@ -1282,44 +1277,41 @@ def main() -> None:
 
         with t3:
             st.markdown(f"**{L['dynamic_title']}**")
-            if not DYNAMIC_DATA_AVAILABLE:
-                st.caption(L["dynamic_unavailable"])
+            filled_feats = tuple([f for f in features if user_values.get(f) is not None])
+            if len(filled_feats) < 2:
+                st.caption(L["dynamic_need_more"])
             else:
-                filled_feats = tuple([f for f in features if user_values.get(f) is not None])
-                if len(filled_feats) < 2:
-                    st.caption(L["dynamic_need_more"])
+                dyn = dynamic_subset_vs_full(target, filled_feats)
+                if dyn:
+                    feat_names = [feature_title(f, feat_dict.get(f, {}), lang_key) for f in filled_feats]
+                    st.markdown(f"- **{L['dynamic_feats']} ({int(dyn['k'])})**: " + ", ".join(feat_names))
+                    st.markdown(
+                        f"- **{L['dynamic_auc_subset']}**: `{_fmt_num_or_na(dyn['auc_sub'], L['bench_na'])}`; "
+                        + L["dynamic_ci"].format(
+                            lo=_fmt_num_or_na(dyn["auc_sub_ci_low"], L["bench_na"]),
+                            hi=_fmt_num_or_na(dyn["auc_sub_ci_high"], L["bench_na"]),
+                        )
+                    )
+                    st.markdown(
+                        f"- **{L['dynamic_auc_full']}**: `{_fmt_num_or_na(dyn['auc_full'], L['bench_na'])}`; "
+                        + L["dynamic_ci"].format(
+                            lo=_fmt_num_or_na(dyn["auc_full_ci_low"], L["bench_na"]),
+                            hi=_fmt_num_or_na(dyn["auc_full_ci_high"], L["bench_na"]),
+                        )
+                    )
+                    st.markdown(
+                        f"- **{L['dynamic_auc_ratio']}**: `{_fmt_num_or_na(dyn['auc_ratio'], L['bench_na'])}`; "
+                        + L["dynamic_ci"].format(
+                            lo=_fmt_num_or_na(dyn["auc_ratio_ci_low"], L["bench_na"]),
+                            hi=_fmt_num_or_na(dyn["auc_ratio_ci_high"], L["bench_na"]),
+                        )
+                    )
+                    st.markdown(f"- **{L['dynamic_delta_auc']}**: `{_fmt_num_or_na(dyn['auc_delta'], L['bench_na'])}`")
+                    st.markdown(f"- **{L['dynamic_ratio_acc']}**: `{_fmt_num_or_na(dyn['acc_ratio'], L['bench_na'])}`")
+                    st.markdown(f"- **{L['dynamic_delta_acc']}**: `{_fmt_num_or_na(dyn['acc_delta'], L['bench_na'])}`")
+                    st.caption(L["dynamic_note"])
                 else:
-                    dyn = dynamic_subset_vs_full(target, filled_feats)
-                    if dyn:
-                        feat_names = [feature_title(f, feat_dict.get(f, {}), lang_key) for f in filled_feats]
-                        st.markdown(f"- **{L['dynamic_feats']} ({int(dyn['k'])})**: " + ", ".join(feat_names))
-                        st.markdown(
-                            f"- **{L['dynamic_auc_subset']}**: `{_fmt_num_or_na(dyn['auc_sub'], L['bench_na'])}`; "
-                            + L["dynamic_ci"].format(
-                                lo=_fmt_num_or_na(dyn["auc_sub_ci_low"], L["bench_na"]),
-                                hi=_fmt_num_or_na(dyn["auc_sub_ci_high"], L["bench_na"]),
-                            )
-                        )
-                        st.markdown(
-                            f"- **{L['dynamic_auc_full']}**: `{_fmt_num_or_na(dyn['auc_full'], L['bench_na'])}`; "
-                            + L["dynamic_ci"].format(
-                                lo=_fmt_num_or_na(dyn["auc_full_ci_low"], L["bench_na"]),
-                                hi=_fmt_num_or_na(dyn["auc_full_ci_high"], L["bench_na"]),
-                            )
-                        )
-                        st.markdown(
-                            f"- **{L['dynamic_auc_ratio']}**: `{_fmt_num_or_na(dyn['auc_ratio'], L['bench_na'])}`; "
-                            + L["dynamic_ci"].format(
-                                lo=_fmt_num_or_na(dyn["auc_ratio_ci_low"], L["bench_na"]),
-                                hi=_fmt_num_or_na(dyn["auc_ratio_ci_high"], L["bench_na"]),
-                            )
-                        )
-                        st.markdown(f"- **{L['dynamic_delta_auc']}**: `{_fmt_num_or_na(dyn['auc_delta'], L['bench_na'])}`")
-                        st.markdown(f"- **{L['dynamic_ratio_acc']}**: `{_fmt_num_or_na(dyn['acc_ratio'], L['bench_na'])}`")
-                        st.markdown(f"- **{L['dynamic_delta_acc']}**: `{_fmt_num_or_na(dyn['acc_delta'], L['bench_na'])}`")
-                        st.caption(L["dynamic_note"])
-                    else:
-                        st.caption(L["dynamic_need_more"])
+                    st.caption(L["dynamic_need_more"])
 
         with t4:
             csv_data = build_export_csv(target, risk, level, features, core_features, user_values, value_trace, feat_dict)
