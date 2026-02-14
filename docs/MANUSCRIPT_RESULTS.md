@@ -46,6 +46,18 @@ eICU 盲测结果见 Table 4（`docs/tables/main/Table4_external_validation.csv`
 
 ---
 
+## 精简版外部验证（附加分析）
+
+基于开发集内推荐特征数（POF=3、28 天死亡=8、Composite=4）训练的精简版 XGBoost 在 eICU 的外部验证结果见 Table 4b（`results/main/tables/Table4_external_validation_slim.csv`）。
+
+- **POF（k=3）**：AUC 0.837（95% CI 0.812–0.860），敏感度 0.307，特异度 0.983。
+- **28 天死亡（k=8）**：AUC 0.849（95% CI 0.816–0.881），敏感度 0.688，特异度 0.800。
+- **Composite（k=4）**：AUC 0.851（95% CI 0.827–0.871），敏感度 0.561，特异度 0.913。
+
+该附加分析显示：在减少特征后模型仍保持较高判别能力，但敏感度/特异度的平衡发生变化（尤其 POF 倾向高特异度、较低敏感度），应结合具体临床场景选择阈值与用途。
+
+---
+
 ## 临床效用
 
 决策曲线分析（DCA）显示，在阈值 0–1 的合理范围内（临床常用 0–0.5），预测模型较 Treat All 和 Treat None 策略具有净获益（Figure 3）；具体净获益数值见 Supplementary Table S4（`docs/tables/supplementary/ST4_DCA_summary.csv`）。
@@ -57,3 +69,5 @@ eICU 盲测结果见 Table 4（`docs/tables/main/Table4_external_validation.csv`
 ## 可解释性
 
 **SHAP 可解释性**：SHAP 摘要图（Figure 4）展示各终点下关键预测因子的贡献。主要终点 POF 中，肌酐、P/F 比、pH、白蛋白、乳酸等贡献较大；次要终点 28 天死亡中，年龄、BUN、PTT、乳酸、血红蛋白等贡献突出；混合终点 Composite 中，creatinine_max、pao2fio2ratio_min、ph_min、bun_min、albumin_min 等贡献突出，与 LASSO 入选特征一致。个体 SHAP 力导向图与依赖图见补充材料 S5。
+
+部署端 `deploy_min/app.py` 已提供单病例 SHAP waterfall 与 force 面板，并与特征字典名称保持一致，用于病例级研究展示。

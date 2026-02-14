@@ -110,10 +110,14 @@ eICU 原始表与 MIMIC 特征空间对齐（列名、单位、时间窗已由 S
 
 eICU 队列使用 deploy_bundle 进行预处理，无任何再拟合。报告 AUC（95% CI）、Brier、灵敏度、特异度、AUPRC 及阈值。跨队列分布漂移分析见 Supplementary Table S3（`docs/tables/supplementary/ST3_drift_analysis.csv`）及补充材料 S4。
 
+作为附加分析，我们增加了精简版 XGBoost 外部验证（`scripts/audit_eval/10b_external_validation_slim.py`）：基于开发集内特征重要性排序固定特征数（POF=3、28 天死亡=8、Composite=4），在 MIMIC 训练集重训并校准精简模型，在 MIMIC 测试集用 Youden 指数确定阈值后固定到 eICU 队列评估。结果单独输出为 `results/main/tables/Table4_external_validation_slim.csv`，不替代主分析的多模型 Table 4。
+
 ---
 
 ## 临床效用与可解释性
 
 采用决策曲线分析（DCA）评估净获益，与 Treat All、Treat None 参考线比较。采用 SHAP（SHapley Additive exPlanations）进行全局特征贡献与个体预测解释。基于 logistic 回归系数构建列线图，并报告 Bootstrap odds ratio（OR）及 95% CI。OR 统计见 Supplementary Table S1（`docs/tables/supplementary/ST1_OR_*.csv`）。详见 Figure 3、Figure 4、Figure 5 及补充材料 S5。
+
+此外，部署端 `deploy_min/app.py` 支持单病例推理与单例 SHAP 面板（waterfall 与 force 图），并统一调用特征字典展示名（含单位）以保证临床显示一致性。该功能用于研究演示，不替代主文统计分析。
 
 **软件与环境**：Python 3.10+，scikit-learn，XGBoost，Optuna，SHAP；复现所需依赖见 `requirements.txt`。

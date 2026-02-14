@@ -71,6 +71,7 @@
 │ 验证与解释层                                                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  03 Table 1 基线（MIMIC/eICU、SMD）  09 漂移分析  10 外部验证(Table 4, Fig2)  │
+│  10b 精简版外部验证(可选, k=3/8/4)                                           │
 │  11 SHAP  12 DCA/校准(Fig3)  13 列线图/森林图(Fig5)                          │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -184,12 +185,14 @@ Figure 1 所需纳入排除人数由 `01_mimic_flowchart_counts.sql`、`08_eicu_
 - eICU 盲测，无任何再拟合
 - 使用 deploy_bundle 进行克隆式预处理
 - 报告 AUC、95% CI、校准度、DCA
+- 可选附加分析：`10b_external_validation_slim.py` 使用预设精简特征数（POF=3、Mortality=8、Composite=4）训练精简版 XGBoost，并在 eICU 上输出独立外部验证表 `Table4_external_validation_slim.csv`
 
 ### 3.9 临床效用与可解释性
 
 - **DCA**：净获益、Treat All/None 参考线
 - **SHAP**：全局特征贡献、个体预测解释
 - **列线图**：Logistic 回归系数、Bootstrap OR 及 95% CI
+- **Web 计算器（deploy_min/app.py）**：支持单病例预测、单位换算、缺失插补追踪，以及单例 SHAP `waterfall/force` 图（变量名称与特征字典一致）
 
 ---
 
@@ -205,6 +208,7 @@ Figure 1 所需纳入排除人数由 `01_mimic_flowchart_counts.sql`、`08_eicu_
 | **Table 2** | `results/main/tables/Table2_renal_subgroup.csv` | 肾亚组分析（如适用） |
 | **Table 3** | `results/main/tables/Table3_performance.csv` | 内部验证效能（AUC、灵敏度、特异度、最优切点） |
 | **Table 4** | `results/main/tables/Table4_external_validation.csv` | 外部验证效能（eICU） |
+| **Table 4b（附加）** | `results/main/tables/Table4_external_validation_slim.csv` | 精简版 XGBoost 外部验证（默认 k=3/8/4） |
 
 ### 4.2 主文插图（Main Text Figures）
 
@@ -244,6 +248,8 @@ Figure 1 所需纳入排除人数由 `01_mimic_flowchart_counts.sql`、`08_eicu_
 cd <project_root>
 uv run python run_all.py              # 全流程
 uv run python run_all.py --skip-04   # 跳过可选审计
+uv run python run_all.py --with-xgb-pruning   # 开启 06b（开发集内变量筛选）
+uv run python run_all.py --with-slim-external # 开启 10b（精简版外部验证）
 uv run python run_all.py --mimic-only   # 仅 MIMIC 阶段 (01-07)
 uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 ```
@@ -269,6 +275,7 @@ uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 | | 03 | `cd scripts/audit_eval && uv run python 03_table1_baseline.py`（全流程：含 eICU 列） |
 | | 09 | `cd scripts/audit_eval && uv run python 09_cross_cohort_audit.py` |
 | | 10 | `cd scripts/audit_eval && uv run python 10_external_validation_perf.py` |
+| | 10b | `cd scripts/audit_eval && uv run python 10b_external_validation_slim.py`（可选，默认 k=3/8/4） |
 | **解释** | 11 | `cd scripts/audit_eval && uv run python 11_model_interpretation_shap.py` |
 | | 12 | `cd scripts/audit_eval && uv run python 12_clinical_calibration_dca.py` |
 | | 13 | `cd scripts/audit_eval && uv run python 13_nomogram_odds_ratio.py` |
@@ -344,6 +351,7 @@ uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 │   ├── modeling/
 │   │   ├── 05_feature_selection_lasso.py
 │   │   ├── 06_model_training_main.py
+│   │   ├── 06b_xgb_internal_feature_pruning.py
 │   │   └── 07_optimal_cutoff_analysis.py
 │   │
 │   ├── audit_eval/
@@ -351,6 +359,7 @@ uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 │   │   ├── 04_mimic_stat_audit.py
 │   │   ├── 09_cross_cohort_audit.py
 │   │   ├── 10_external_validation_perf.py
+│   │   ├── 10b_external_validation_slim.py
 │   │   ├── 11_model_interpretation_shap.py
 │   │   ├── 12_clinical_calibration_dca.py
 │   │   └── 13_nomogram_odds_ratio.py
@@ -373,7 +382,8 @@ uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 │   │   │   ├── Table1_baseline.csv           # 基线特征（MIMIC Non-POF/POF、eICU、SMD）
 │   │   │   ├── Table2_renal_subgroup.csv     # 肾亚组分析
 │   │   │   ├── Table3_performance.csv        # 内部验证效能（AUC、灵敏度、特异度、最优切点）
-│   │   │   └── Table4_external_validation.csv # 外部验证效能（eICU）
+│   │   │   ├── Table4_external_validation.csv # 外部验证效能（eICU）
+│   │   │   └── Table4_external_validation_slim.csv # 附加：精简版外部验证（k=3/8/4）
 │   │   └── figures/
 │   │       ├── Fig1_missing_heatmap.{pdf,png}           # 缺失模式热图
 │   │       ├── Fig2_ROC_external_{pof,mortality,composite}.{pdf,png}  # 外部验证 ROC
@@ -425,6 +435,7 @@ uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 - **Step 03**：先划分 train/test，再在训练集上 fit MICE 与 Scaler
 - **Step 05**：LASSO 仅用训练集
 - **Step 09**：eICU 使用 deploy_bundle，无任何再拟合
+- **Step 10b（可选）**：仅使用 MIMIC train 拟合精简模型，阈值由 MIMIC test 的 Youden 指数确定，随后固定到 eICU 外部验证
 
 ### 6.2 Table 1 基线表规范
 

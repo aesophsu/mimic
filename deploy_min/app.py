@@ -1,11 +1,14 @@
 import json
 import os
+import io
 from pathlib import Path
 from typing import Any
 
 import joblib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import shap
 import streamlit as st
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import accuracy_score, roc_auc_score
@@ -114,6 +117,14 @@ I18N = {
         "explain_none": "No obvious out-of-range signal from the provided values.",
         "explain_high": "{name} is above reference ({value} vs {lo}-{hi}).",
         "explain_low": "{name} is below reference ({value} vs {lo}-{hi}).",
+        "shap_title": "Individual SHAP Explanation",
+        "shap_run": "Generate SHAP plots",
+        "shap_note": "Model-based feature attribution for this single case.",
+        "shap_waterfall": "Waterfall plot",
+        "shap_force": "Force plot",
+        "shap_top": "Top feature contributions",
+        "shap_failed": "SHAP generation failed: {err}",
+        "shap_stale": "Inputs changed. Click to regenerate SHAP plots.",
         "missing_rate_all": "Missing rate (all model features): {pct}% ({miss}/{total})",
         "missing_rate_core": "Missing rate (core features): {pct}% ({miss}/{total})",
         "missing_hint": "Higher missing rate means stronger dependence on imputation.",
@@ -205,6 +216,14 @@ I18N = {
         "explain_none": "当前已填值未出现明显超出参考范围的信号。",
         "explain_high": "{name} 高于参考范围（{value}，参考 {lo}-{hi}）。",
         "explain_low": "{name} 低于参考范围（{value}，参考 {lo}-{hi}）。",
+        "shap_title": "个体 SHAP 解释",
+        "shap_run": "生成 SHAP 图",
+        "shap_note": "针对当前病例的模型特征归因解释。",
+        "shap_waterfall": "瀑布图",
+        "shap_force": "Force 图",
+        "shap_top": "主要贡献特征",
+        "shap_failed": "SHAP 生成失败: {err}",
+        "shap_stale": "输入已变更，请重新点击生成 SHAP 图。",
         "missing_rate_all": "缺失率（全部模型特征）: {pct}%（{miss}/{total}）",
         "missing_rate_core": "缺失率（核心特征）: {pct}%（{miss}/{total}）",
         "missing_hint": "缺失率越高，结果越依赖插补。",
@@ -569,6 +588,88 @@ def predict_risk(bundle: dict[str, Any], input_values: dict[str, float | None]) 
     model = bundle["best_model"]
     proba = float(model.predict_proba(X)[0, 1])
     return proba
+
+
+@st.cache_data
+def load_shap_background(target: str, features_key: tuple[str, ...], max_rows: int = 40) -> pd.DataFrame:
+    features = list(features_key)
+    bundle = load_bundle(target)
+    for path in [TEST_PATH, TRAIN_PATH]:
+        if not os.path.exists(path):
+            continue
+        try:
+            df = pd.read_csv(path)
+            if not set(features).issubset(set(df.columns)):
+                continue
+            x_raw = df[features].dropna().head(max_rows)
+            if len(x_raw) < 5:
+                continue
+            x_bg = bundle["scaler"].transform(x_raw)
+            return pd.DataFrame(x_bg, columns=features)
+        except Exception:
+            continue
+    fallback_rows = max(5, min(20, max_rows))
+    return pd.DataFrame(np.zeros((fallback_rows, len(features))), columns=features)
+
+
+def build_single_case_shap_explanation(
+    target: str,
+    bundle: dict[str, Any],
+    input_values: dict[str, float | None],
+    feat_dict: dict[str, Any],
+    lang_key: str,
+) -> shap.Explanation:
+    features = list(bundle["features"])
+    x_case = pd.DataFrame(preprocess_single_row(bundle, input_values), columns=features)
+    x_bg = load_shap_background(target, tuple(features), max_rows=40)
+    model = bundle["best_model"]
+    explainer = shap.Explainer(model.predict_proba, x_bg)
+    sv = explainer(x_case)
+    exp = sv[0, :, 1]
+    display_names = [feature_title(f, feat_dict.get(f, {}), lang_key) for f in features]
+    base_value = float(np.array(exp.base_values).reshape(-1)[0])
+    return shap.Explanation(
+        values=np.array(exp.values),
+        base_values=base_value,
+        data=np.array(exp.data),
+        feature_names=display_names,
+    )
+
+
+def render_shap_images(exp: shap.Explanation, max_display: int = 12) -> tuple[bytes, bytes]:
+    buf_wf = io.BytesIO()
+    shap.plots.waterfall(exp, max_display=max_display, show=False)
+    plt.tight_layout()
+    plt.savefig(buf_wf, format="png", dpi=220, bbox_inches="tight")
+    plt.close()
+
+    buf_force = io.BytesIO()
+    plt.figure(figsize=(12, 2.8), dpi=180)
+    shap.force_plot(
+        exp.base_values,
+        exp.values,
+        exp.data,
+        feature_names=exp.feature_names,
+        matplotlib=True,
+        show=False,
+        text_rotation=12,
+        contribution_threshold=0.03,
+    )
+    plt.tight_layout()
+    plt.savefig(buf_force, format="png", dpi=220, bbox_inches="tight")
+    plt.close()
+    return buf_wf.getvalue(), buf_force.getvalue()
+
+
+def top_shap_contributions(exp: shap.Explanation, top_n: int = 5) -> list[str]:
+    values = np.array(exp.values)
+    names = list(exp.feature_names)
+    idx = np.argsort(np.abs(values))[::-1][:top_n]
+    lines = []
+    for i in idx:
+        sign = "+" if values[i] >= 0 else "-"
+        lines.append(f"{names[i]}: {sign}{abs(values[i]):.3f}")
+    return lines
 
 
 def feature_title(feature: str, meta: dict[str, Any], lang: str) -> str:
@@ -1271,6 +1372,34 @@ def main() -> None:
                     st.markdown(f"- {line}")
             else:
                 st.caption(L["explain_none"])
+            st.markdown(f"**{L['shap_title']}**")
+            st.caption(L["shap_note"])
+            shap_sig = tuple((f, user_values.get(f)) for f in features)
+            shap_state_key = f"shap_payload_{target}_{lang_key}"
+            if st.button(L["shap_run"], key=f"run_shap_{target}_{lang_key}"):
+                try:
+                    exp = build_single_case_shap_explanation(target, bundle, user_values, feat_dict, lang_key)
+                    img_wf, img_force = render_shap_images(exp, max_display=min(12, len(features)))
+                    st.session_state[shap_state_key] = {
+                        "sig": shap_sig,
+                        "waterfall": img_wf,
+                        "force": img_force,
+                        "top": top_shap_contributions(exp, top_n=5),
+                    }
+                except Exception as err:
+                    st.error(L["shap_failed"].format(err=err))
+
+            payload = st.session_state.get(shap_state_key)
+            if payload:
+                if payload.get("sig") == shap_sig:
+                    st.markdown(f"- **{L['shap_top']}**")
+                    for line in payload.get("top", []):
+                        st.markdown(f"- {line}")
+                    c1, c2 = st.columns(2)
+                    c1.image(payload["waterfall"], caption=L["shap_waterfall"], use_container_width=True)
+                    c2.image(payload["force"], caption=L["shap_force"], use_container_width=True)
+                else:
+                    st.caption(L["shap_stale"])
 
         with t2:
             st.caption(L["completeness_weighted"].format(pct=f"{completeness_pct:.1f}"))

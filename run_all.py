@@ -4,7 +4,7 @@
 
 执行顺序（Python 流程 01-13，SQL 01/08 单独执行）：
   I. MIMIC 阶段: 01 → 02 → 03(仅 MIMIC) → 04(可选) → 05 → 06 → [06b可选] → 07
-  II. eICU 阶段: 08 → 03(含 eICU 列) → 09 → 10
+  II. eICU 阶段: 08 → 03(含 eICU 列) → 09 → 10 → [10b可选]
   III. 解释阶段: 11 → 12 → 13
 
 注：03 在 mimic-only 时于 02 后运行（MIMIC-only Table 1）；全流程/eicu-only 时于 08 后运行（完整 Table 1 含 eICU 外部验证列）。
@@ -42,6 +42,7 @@ _STEP_DEFS = {
     "08": ("scripts/preprocess", "08_eicu_alignment_cleaning.py", "eICU 对齐清洗"),
     "09": ("scripts/audit_eval", "09_cross_cohort_audit.py", "跨队列漂移审计"),
     "10": ("scripts/audit_eval", "10_external_validation_perf.py", "外部验证效能"),
+    "10b": ("scripts/audit_eval", "10b_external_validation_slim.py", "精简版外部验证（可选）"),
     "11": ("scripts/audit_eval", "11_model_interpretation_shap.py", "SHAP 解释"),
     "12": ("scripts/audit_eval", "12_clinical_calibration_dca.py", "DCA 校准"),
     "13": ("scripts/audit_eval", "13_nomogram_odds_ratio.py", "列线图与森林图"),
@@ -102,6 +103,7 @@ def main():
     parser.add_argument("--mimic-only", action="store_true", help="仅运行 MIMIC 阶段 (01-07)")
     parser.add_argument("--eicu-only", action="store_true", help="仅运行 eICU+解释 (08-13)")
     parser.add_argument("--with-xgb-pruning", action="store_true", help="启用可选 Step 06b（仅开发集内 XGBoost 变量筛选）")
+    parser.add_argument("--with-slim-external", action="store_true", help="启用可选 Step 10b（k=3/4/8 精简版外部验证）")
     parser.add_argument("--continue-on-error", action="store_true", help="遇错继续执行后续步骤")
     args = parser.parse_args()
 
@@ -116,6 +118,12 @@ def main():
         for seq in (MIMIC_STEPS, FULL_STEPS):
             if "06" in seq and "06b" not in seq:
                 seq.insert(seq.index("06") + 1, "06b")
+
+    if args.with_slim_external:
+        # 10b 仅作为附加分析，插入在 10 与 11 之间，不影响主流程默认行为
+        for seq in (FULL_STEPS, EICU_STEPS):
+            if "10" in seq and "10b" not in seq:
+                seq.insert(seq.index("10") + 1, "10b")
 
     if args.mimic_only:
         steps_to_run = _build_steps(MIMIC_STEPS)
