@@ -1,14 +1,14 @@
 # 重症急性胰腺炎预测模型：基于 MIMIC-IV v3.1 与 eICU 的机器学习开发与外部验证
 
-> 本研究以**完成一篇医学专业论文**为导向。本文档提供：**研究流程总览**、**数据提取方法**（MIMIC/eICU 纳入排除、时间窗、结局定义）、**数据清洗与预处理步骤**（审计、缺失、变换、划分、MICE、标准化）、**方法学与稿件图表对应**，便于直接撰写 Methods、Results 及 Supplementary Materials，并满足 TRIPOD 报告规范。
+> 本文档提供：**研究流程总览**、**数据提取方法**（MIMIC/eICU 纳入排除、时间窗、结局定义）、**数据清洗与预处理步骤**（审计、缺失、变换、划分、MICE、标准化）、**方法学与稿件图表对应**，便于直接撰写 Methods、Results 及 Supplementary Materials，并满足 TRIPOD 报告规范。
 
 ---
 
 ## 一、研究概要
 
-### 1.1 标题（建议）
+### 1.1 标题
 
-**Development and External Validation of Machine Learning Models for Predicting Persistent Organ Failure and Mortality in Severe Acute Pancreatitis: A Multicenter Cohort Study**
+**Early Prediction of Persistent Organ Failure in Patients with Acute Pancreatitis: A Multicenter Development and External Validation Study**
 
 ### 1.2 结构化摘要（Structured Abstract）
 
@@ -33,7 +33,7 @@
 
 ---
 
-## 二、研究流程总览（论文 Methods 路线图）
+## 二、研究流程总览（Methods 路线图）
 
 本研究从原始数据库到可投稿图表，分为 **数据层 → 预处理层 → 建模层 → 验证与解释层**，对应稿件的 **Study population、Variables、Model development、Validation、Clinical utility**。
 
@@ -428,7 +428,7 @@ uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 
 ### 6.2 Table 1 基线表规范
 
-Table 1 由 `scripts/audit_eval/03_table1_baseline.py` 生成，符合医学论文规范：
+Table 1 由 `scripts/audit_eval/03_table1_baseline.py` 生成：
 
 - **结构分组**：Demographics & Comorbidities → Severity Scores at Admission → Organ Support → Laboratory Parameters → Outcomes
 - **SMD (POF vs Non-POF)**：MIMIC 内部组间均衡性，SMD > 0.1 表示存在显著差异
