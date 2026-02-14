@@ -1,0 +1,11 @@
+Threshold,TP,FP,TN,FN,Sensitivity,Specificity,PPV,NPV,F1_Score,Accuracy,Algorithm,Group,Outcome,AUC,Subgroup_Specific_Th
+0.5298,77,22,99,21,0.7857,0.8182,0.7778,0.825,0.7817,0.8037,XGBoost,Full Population,composite,0.866,
+0.5298,14,9,82,16,0.4667,0.9011,0.6087,0.8367,0.5283,0.7934,XGBoost,Subgroup (Non-Renal),composite,0.7625,0.4349
+0.5888,76,21,100,22,0.7755,0.8264,0.7835,0.8197,0.7795,0.8037,Random Forest,Full Population,composite,0.8654,
+0.5888,14,10,81,16,0.4667,0.8901,0.5833,0.8351,0.5185,0.7851,Random Forest,Subgroup (Non-Renal),composite,0.7658,0.3361
+0.4667,81,27,94,17,0.8265,0.7769,0.75,0.8468,0.7864,0.7991,SVM,Full Population,composite,0.8809,
+0.4667,16,11,80,14,0.5333,0.8791,0.5926,0.8511,0.5614,0.7934,SVM,Subgroup (Non-Renal),composite,0.7886,0.1431
+0.507,81,30,91,17,0.8265,0.7521,0.7297,0.8426,0.7751,0.7854,Decision Tree,Full Population,composite,0.84,
+0.507,18,14,77,12,0.6,0.8462,0.5625,0.8652,0.5806,0.7851,Decision Tree,Subgroup (Non-Renal),composite,0.7005,0.4542
+0.453,82,28,93,16,0.8367,0.7686,0.7455,0.8532,0.7885,0.7991,Logistic Regression,Full Population,composite,0.8673,
+0.453,18,12,79,12,0.6,0.8681,0.6,0.8681,0.6,0.8017,Logistic Regression,Subgroup (Non-Renal),composite,0.7639,0.453

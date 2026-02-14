@@ -8,13 +8,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils import resample
+from sklearn.calibration import calibration_curve
 import matplotlib.ticker as ticker
 _sys_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if _sys_path not in sys.path:
     sys.path.insert(0, _sys_path)
 from utils.feature_formatter import FeatureFormatter
 from utils.study_config import OUTCOMES
-from utils.paths import get_project_root, get_model_dir, get_main_figure_dir, get_main_table_dir, get_supplementary_table_dir, get_cleaned_path, ensure_dirs
+from utils.paths import get_project_root, get_model_dir, get_main_figure_dir, get_main_table_dir, get_supplementary_table_dir, get_cleaned_path, get_supplementary_figure_dir, ensure_dirs
 from utils.logger import log as _log, log_header
 from utils.plot_utils import PlotUtils
 from utils.plot_config import PlotConfig, apply_medical_style, save_fig_medical
@@ -24,6 +25,7 @@ MODEL_ROOT = get_model_dir()
 FIGURE_DIR = get_main_figure_dir()  # Fig5 Nomogram, Forest
 TABLE_DIR = get_main_table_dir()
 SUPP_TABLE_DIR = get_supplementary_table_dir()  # OR_Statistics
+SUPP_FIG_NOMOGRAM_CALIB = get_supplementary_figure_dir("S5_nomogram_calibration")
 ensure_dirs(FIGURE_DIR, TABLE_DIR, SUPP_TABLE_DIR)
 
 TARGETS = OUTCOMES
@@ -98,6 +100,63 @@ def get_or_with_bootstrap(model, X_test, y_test, features, n_iterations=500):
         'OR_Upper': np.exp(upper_coefs),
         'Coef': raw_coefs
     })
+
+
+def plot_lr_calibration_internal(model, X_test, y_test, target, lang="en"):
+    """
+    针对构建 Nomogram 的逻辑回归模型，绘制内部验证校准曲线。
+    使用与 Step 06 一致的风格，仅包含 Logistic Regression 一条曲线。
+    """
+    apply_medical_style()
+    plt.figure(figsize=(7.2, 6), dpi=300, facecolor="white")
+    ax = plt.gca()
+
+    # 支持 CalibratedClassifierCV 或裸 LogisticRegression
+    y_prob = model.predict_proba(X_test)[:, 1]
+    prob_true, prob_pred = calibration_curve(y_test, y_prob, n_bins=10, strategy="uniform")
+
+    plt.plot(
+        prob_pred,
+        prob_true,
+        marker="s",
+        ms=6,
+        lw=2,
+        color="#2c3e50",
+        label="Logistic Regression",
+        alpha=0.95,
+    )
+    plt.plot(
+        [0, 1],
+        [0, 1],
+        color="#7f8c8d",
+        linestyle=":",
+        lw=1.5,
+        label="Perfectly Calibrated",
+    )
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.xlabel("Predicted Probability", fontsize=PlotConfig.LABEL_FONT, labelpad=10)
+    plt.ylabel("Observed Probability", fontsize=PlotConfig.LABEL_FONT, labelpad=10)
+
+    title = (
+        f"Calibration of Nomogram (Internal, {target.upper()})"
+        if lang == "en"
+        else f"{target.upper()} 列线图内部校准曲线"
+    )
+    plt.title(title, fontsize=PlotConfig.TITLE_FONT, fontweight="bold", pad=18)
+    plt.legend(loc="upper left", fontsize=10, frameon=False)
+    plt.grid(color="whitesmoke", linestyle="-", linewidth=1)
+    plt.tight_layout()
+
+    save_base = os.path.join(
+        SUPP_FIG_NOMOGRAM_CALIB,
+        f"Fig5_nomogram_LR_calibration_{target}_internal",
+    )
+    ensure_dirs(SUPP_FIG_NOMOGRAM_CALIB)
+    save_fig_medical(save_base)
+    plt.close()
+    _log(f"Nomogram Calibration (internal, {target}): {os.path.abspath(save_base)}.png", "OK")
 
 def plot_forest_or(or_df, target, formatter, lang='en', show_or_text=True):
     """
@@ -524,7 +583,7 @@ def process_single_target(target, raw_df):
         verify_feature_units(or_results, feat_ranges, formatter)
 
         # 4. 绘图 (plot_nomogram_standard 内部已包含 PDF 保存逻辑)
-        # 4. 提取精确绘图所需的模型参数 (Intercept 和 Max Coef)
+        # 4.1 提取精确绘图所需的模型参数 (Intercept 和 Max Coef)
         if hasattr(model, 'calibrated_classifiers_'):
             base_model = model.calibrated_classifiers_[0].estimator
         else:
@@ -534,7 +593,7 @@ def process_single_target(target, raw_df):
         # 获取 OR 结果中绝对值最大的系数，用于标准化点数基准
         max_abs_coef = or_results['Coef'].abs().max()
 
-        # 5. 绘图
+        # 5. 绘制森林图与列线图
         plot_forest_or(or_results, target, formatter=formatter)
         plot_nomogram_standard(
             or_results, 
@@ -544,6 +603,9 @@ def process_single_target(target, raw_df):
             intercept=model_intercept,
             max_coef=max_abs_coef
         )
+
+        # 6. 逻辑回归 Nomogram 的内部校准曲线
+        plot_lr_calibration_internal(model, X_test, y_test, target, lang='en')
         
         _log(f"Statistics and Figures generated for {target}.", "OK")
         

@@ -1,0 +1,47 @@
+Outcome,Model,Threshold,Net_benefit
+POF,XGBoost,0.1,0.354
+POF,XGBoost,0.2,0.307
+POF,XGBoost,0.3,0.268
+POF,XGBoost,0.4,0.225
+POF,XGBoost,0.5,0.170
+POF,Random Forest,0.1,0.356
+POF,Random Forest,0.2,0.316
+POF,Random Forest,0.3,0.275
+POF,Random Forest,0.4,0.232
+POF,Random Forest,0.5,0.186
+POF,SVM,0.1,0.356
+POF,SVM,0.2,0.312
+POF,SVM,0.3,0.261
+POF,SVM,0.4,0.228
+POF,SVM,0.5,0.181
+Mortality,XGBoost,0.1,0.038
+Mortality,XGBoost,0.2,0.021
+Mortality,XGBoost,0.3,0.008
+Mortality,XGBoost,0.4,0.004
+Mortality,XGBoost,0.5,0.003
+Mortality,Random Forest,0.1,0.034
+Mortality,Random Forest,0.2,0.019
+Mortality,Random Forest,0.3,0.011
+Mortality,Random Forest,0.4,0.009
+Mortality,Random Forest,0.5,0.001
+Mortality,SVM,0.1,0.037
+Mortality,SVM,0.2,0.021
+Mortality,SVM,0.3,0.014
+Mortality,SVM,0.4,0.004
+Mortality,SVM,0.5,0.003
+Composite,XGBoost,0.1,0.369
+Composite,XGBoost,0.2,0.320
+Composite,XGBoost,0.3,0.277
+Composite,XGBoost,0.4,0.237
+Composite,XGBoost,0.5,0.197
+Composite,Random Forest,0.1,0.367
+Composite,Random Forest,0.2,0.321
+Composite,Random Forest,0.3,0.281
+Composite,Random Forest,0.4,0.239
+Composite,Random Forest,0.5,0.205
+Composite,SVM,0.1,0.364
+Composite,SVM,0.2,0.311
+Composite,SVM,0.3,0.264
+Composite,SVM,0.4,0.222
+Composite,SVM,0.5,0.196
+Note. Net benefit at selected thresholds (0.1-0.5) from decision curve analysis; eICU external validation cohort (n=1112).,,,

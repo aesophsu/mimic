@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 import shap
 import warnings
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from utils.paths import get_model_dir, get_main_figure_dir, get_supplementary_figure_dir, ensure_dirs
+from utils.paths import get_model_dir, get_main_figure_dir, get_supplementary_figure_dir, get_project_root, ensure_dirs
 from utils.feature_formatter import FeatureFormatter
 from utils.study_config import OUTCOMES
-from utils.plot_config import apply_medical_style, SAVE_DPI, FIG_WIDTH_DOUBLE, save_fig_medical
+from utils.plot_config import apply_medical_style, SAVE_DPI, FIG_WIDTH_DOUBLE, PALETTE_MAIN, save_fig_medical
 from utils.logger import log as _log, log_header
 
 warnings.filterwarnings("ignore")
@@ -104,16 +104,55 @@ def plot_shap_summary(shap_values, X, target):
     save_fig_medical(base_n)
     plt.close()
 
+
+def plot_shap_importance_bar(shap_values, X, target, max_display=15):
+    """Global SHAP importance：各特征 mean(|SHAP|) 横向条形图，与 beeswarm 特征顺序一致"""
+    apply_medical_style()
+    feature_names = _get_forest_style_feature_names(X.columns.tolist())
+    imp = np.abs(shap_values.values).mean(axis=0)
+    order = np.argsort(imp)[::-1][:max_display]
+    names_ordered = [feature_names[i] for i in order]
+    imp_ordered = imp[order]
+    color = PALETTE_MAIN[0] if PALETTE_MAIN else "#4DBBD5"
+    fig, ax = plt.subplots(figsize=(FIG_WIDTH_DOUBLE, 6), dpi=300, facecolor='white')
+    y_pos = np.arange(len(names_ordered))[::-1]
+    ax.barh(y_pos, imp_ordered, height=0.7, color=color, alpha=0.9, align='center')
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(names_ordered, fontsize=10)
+    ax.set_xlabel("Mean |SHAP value| (Impact on Model Output)", fontsize=11, labelpad=10)
+    title_map = {
+        "pof": "Global SHAP importance (POF)",
+        "mortality": "Global SHAP importance (28-day mortality)",
+        "composite": "Global SHAP importance (Composite outcome)",
+    }
+    ax.set_title(title_map.get(target.lower(), f"Global SHAP importance ({target})"), fontsize=14, fontweight='bold', pad=15, loc='center')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.grid(axis='x', color='whitesmoke', linestyle='-', linewidth=0.5)
+    plt.tight_layout()
+    base_n = os.path.join(FIGURE_DIR, f"Fig4_SHAP_importance_{target}")
+    save_fig_medical(base_n)
+    docs_fig_main = os.path.join(get_project_root(), "docs", "figures", "main")
+    ensure_dirs(docs_fig_main)
+    save_fig_medical(os.path.join(docs_fig_main, f"Fig4_SHAP_importance_{target}"))
+    plt.close()
+    _log(f"Global SHAP importance 已保存: {base_n}.png 及 docs/figures/main", "OK")
+
+
 def plot_shap_force(shap_values, X, target):
     """个体决策图：解析高风险患者的特征贡献"""
     apply_medical_style()
     risk_scores = shap_values.values.sum(axis=1)
     idx = np.argmax(risk_scores)
+    # 使用与其他图一致的特征展示名，避免 raw 列名（aniongap_min 等）直接出现在图中
+    feature_names = _get_forest_style_feature_names(X.columns.tolist())
+    X_display = X.copy()
+    X_display.columns = feature_names
     plt.figure(figsize=(FIG_WIDTH_DOUBLE, 3), facecolor='white')
     shap.force_plot(
         shap_values[idx].base_values,
         shap_values[idx].values,
-        X.iloc[idx].round(2),
+        X_display.iloc[idx].round(2),
         matplotlib=True, show=False,
         text_rotation=15, contribution_threshold=0.03
     )
@@ -198,8 +237,9 @@ def main():
             # 2. 计算 SHAP 值
             shap_vals = compute_shap_values(X_test, model, explainer_type)
             save_shap_data(shap_vals, X_test, target)
-            # 3. 生成三大标准解释图
+            # 3. 生成标准解释图：beeswarm、Global importance 条形图、Force、Dependence
             plot_shap_summary(shap_vals, X_test, target)
+            plot_shap_importance_bar(shap_vals, X_test, target)
             plot_shap_force(shap_vals, X_test, target)
             plot_shap_dependence(shap_vals, X_test, target)
             

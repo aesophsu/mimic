@@ -1,0 +1,16 @@
+Endpoint,Target,Algorithm,AUC (95% CI),Brier,Sensitivity,Specificity,AUPRC,Threshold
+Primary,pof,Random Forest,0.859 (0.837–0.881),0.161,0.508,0.957,0.822,0.505
+Primary,pof,SVM,0.849 (0.827–0.871),0.161,0.799,0.732,0.816,0.370
+Primary,pof,XGBoost,0.847 (0.824–0.869),0.165,0.553,0.926,0.809,0.471
+Primary,pof,Decision Tree,0.821 (0.795–0.846),0.177,0.646,0.843,0.768,0.402
+Primary,pof,Logistic Regression,0.736 (0.706–0.767),0.210,0.447,0.909,0.735,0.452
+Secondary,mortality,XGBoost,0.846 (0.809–0.881),0.064,0.323,0.957,0.349,0.333
+Secondary,mortality,Random Forest,0.836 (0.795–0.873),0.065,0.699,0.800,0.338,0.138
+Secondary,mortality,SVM,0.836 (0.791–0.876),0.065,0.688,0.788,0.337,0.139
+Secondary,mortality,Logistic Regression,0.810 (0.767–0.852),0.067,0.462,0.914,0.302,0.222
+Secondary,mortality,Decision Tree,0.779 (0.729–0.824),0.070,0.462,0.882,0.275,0.205
+Composite,composite,Random Forest,0.864 (0.844–0.884),0.155,0.548,0.942,0.839,0.567
+Composite,composite,XGBoost,0.859 (0.837–0.880),0.159,0.569,0.922,0.827,0.520
+Composite,composite,SVM,0.845 (0.822–0.867),0.161,0.696,0.839,0.812,0.492
+Composite,composite,Decision Tree,0.830 (0.807–0.852),0.170,0.682,0.867,0.787,0.507
+Composite,composite,Logistic Regression,0.741 (0.709–0.774),0.212,0.439,0.920,0.739,0.453

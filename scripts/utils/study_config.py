@@ -31,3 +31,17 @@ OUTCOME_LABEL = {
 
 # 分层划分依据（混合终点）
 STRATIFY_COL = 'composite'
+
+# Figure 1 Panel B：纳入排除标准所涉关键生理指标（Methods 一致）
+FIG1_KEY_FEATURES = [
+    'creatinine_max',
+    'bun_max',
+    'lactate_max',
+    'pao2fio2ratio_min',
+    'ph_min',
+    'wbc_max',
+    'hemoglobin_min',
+    'bilirubin_total_max',
+    'sodium_max',
+    'albumin_min',
+]

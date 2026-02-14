@@ -7,11 +7,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from utils.plot_config import apply_medical_style, SAVE_DPI, PALETTE_MAIN, COLOR_REF_LINE, FIG_WIDTH_DOUBLE, save_fig_medical
+from utils.plot_config import apply_medical_style, SAVE_DPI, PALETTE_MAIN, COLOR_REF_LINE, FIG_WIDTH_DOUBLE, save_fig_medical, LABEL_FONT, TITLE_FONT
 from utils.study_config import OUTCOMES, OUTCOME_TYPE
-from utils.paths import get_model_dir, get_external_dir, get_main_table_dir, get_main_figure_dir, get_supplementary_figure_dir, ensure_dirs
+from utils.paths import get_model_dir, get_external_dir, get_main_table_dir, get_main_figure_dir, get_supplementary_figure_dir, get_project_root, ensure_dirs
 from utils.logger import log as _log, log_header
 from utils.deploy_utils import load_deploy_bundle
+from sklearn.calibration import calibration_curve
 from sklearn.metrics import (
     confusion_matrix, f1_score, roc_auc_score,
     average_precision_score, brier_score_loss, roc_curve
@@ -81,10 +82,17 @@ def process_and_align_eicu(target, features):
         
     X = pd.concat(X_list, axis=1)
     y_true = df[target].values
+
+    # 肾功能亚组标记（若缺失则全部视作 1，避免后续逻辑报错）
+    if 'subgroup_no_renal' in df.columns:
+        renal_subgroup = df['subgroup_no_renal'].values.astype(int)
+    else:
+        renal_subgroup = np.ones(len(df), dtype=int)
+        _log("警告: eICU 数据中缺失 subgroup_no_renal 列，分层校准将退化为整体人群。", "WARN")
     
     # Step 09 已输出完全变换数据，直接转为数组供模型推理
     X_arr = np.array(X)
-    return X_arr, y_true
+    return X_arr, y_true, renal_subgroup
 
 def compute_metrics_ci(y_true, y_prob, n_bootstraps=1000, seed=42):
     """同步计算 AUC, AUPRC, Brier 的 95% CI"""
@@ -145,6 +153,103 @@ def plot_roc_all_models(target, eicu_curves, mimic_ref=None):
     save_fig_medical(base_path)
     plt.close()
 
+
+def plot_calibration_external(models, X_eicu, y_eicu, target, extra_save_dir=None):
+    """
+    外部验证（eICU）校准曲线：5 种模型在同一图上，风格与内部验证 06 一致。
+    保存到 results/main/figures/；若提供 extra_save_dir 则再保存到该目录（如 docs/figures/main）。
+    """
+    apply_medical_style()
+    n_models = len(models)
+    colors = PALETTE_MAIN[:n_models] if n_models <= len(PALETTE_MAIN) else list(plt.cm.Set1(np.linspace(0, 1, n_models)))
+    plt.figure(figsize=(FIG_WIDTH_DOUBLE, 6), dpi=300, facecolor='white')
+    ax = plt.gca()
+    for i, (name, model) in enumerate(models.items()):
+        y_prob = model.predict_proba(X_eicu)[:, 1]
+        prob_true, prob_pred = calibration_curve(y_eicu, y_prob, n_bins=10, strategy='uniform')
+        plt.plot(prob_pred, prob_true, marker='s', ms=5, lw=2,
+                 color=colors[i], label=name, alpha=0.9)
+    plt.plot([0, 1], [0, 1], color=COLOR_REF_LINE, linestyle=':', lw=1.5, label='Perfectly Calibrated')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    plt.xlabel("Predicted Probability", fontsize=LABEL_FONT, labelpad=10)
+    plt.ylabel("Actual Observed Probability", fontsize=LABEL_FONT, labelpad=10)
+    plt.title(f"External Validation Calibration: {target.upper()} (eICU)", fontsize=TITLE_FONT, fontweight='bold', pad=20)
+    plt.legend(loc="upper left", fontsize=10, frameon=False)
+    plt.grid(color='whitesmoke', linestyle='-', linewidth=1)
+    plt.tight_layout()
+    fname = f"Fig2_Calibration_external_{target}"
+    base_path = os.path.join(FIGURE_DIR, fname)
+    save_fig_medical(base_path)
+    if extra_save_dir:
+        ensure_dirs(extra_save_dir)
+        save_fig_medical(os.path.join(extra_save_dir, fname))
+    plt.close()
+    _log(f"外部校准图已保存: {os.path.abspath(base_path)}.png" + (f" 及 {extra_save_dir}" if extra_save_dir else ""), "OK")
+
+
+def plot_calibration_external_by_renal(models, X_eicu, y_eicu, renal_sub, target, extra_save_dir=None):
+    """
+    按肾功能亚组 (subgroup_no_renal) 绘制外部验证（eICU）校准曲线。
+    为每个亚组生成一张图，比较 5 种模型在该人群内的校准情况。
+    """
+    y_arr = np.asarray(y_eicu).astype(int)
+    renal_arr = np.asarray(renal_sub).astype(int)
+
+    for grp in [1, 0]:
+        mask = renal_arr == grp
+        if mask.sum() < 10:
+            _log(f"外部校准: subgroup_no_renal={grp} 样本量过少 (n={mask.sum()})，跳过绘图。", "WARN")
+            continue
+        y_sub = y_arr[mask]
+        if len(np.unique(y_sub)) < 2:
+            _log(f"外部校准: subgroup_no_renal={grp} 仅有单一结局，跳过绘图。", "WARN")
+            continue
+
+        apply_medical_style()
+        n_models = len(models)
+        colors = PALETTE_MAIN[:n_models] if n_models <= len(PALETTE_MAIN) else list(plt.cm.Set1(np.linspace(0, 1, n_models)))
+        plt.figure(figsize=(FIG_WIDTH_DOUBLE, 6), dpi=300, facecolor='white')
+        ax = plt.gca()
+
+        for i, (name, model) in enumerate(models.items()):
+            y_prob = model.predict_proba(X_eicu)[:, 1][mask]
+            prob_true, prob_pred = calibration_curve(y_sub, y_prob, n_bins=10, strategy='uniform')
+            plt.plot(
+                prob_pred,
+                prob_true,
+                marker='s',
+                ms=5,
+                lw=2,
+                color=colors[i],
+                label=name,
+                alpha=0.9,
+            )
+
+        plt.plot([0, 1], [0, 1], color=COLOR_REF_LINE, linestyle=':', lw=1.5, label='Perfectly Calibrated')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        plt.xlabel("Predicted Probability", fontsize=LABEL_FONT, labelpad=10)
+        plt.ylabel("Actual Observed Probability", fontsize=LABEL_FONT, labelpad=10)
+        plt.title(
+            f"External Calibration: {target.upper()} (subgroup_no_renal = {grp})",
+            fontsize=TITLE_FONT,
+            fontweight='bold',
+            pad=20,
+        )
+        plt.legend(loc="upper left", fontsize=10, frameon=False)
+        plt.grid(color='whitesmoke', linestyle='-', linewidth=1)
+        plt.tight_layout()
+
+        fname = f"Fig2_Calibration_external_{target}_subgroupNoRenal_{grp}"
+        base_path = os.path.join(FIGURE_DIR, fname)
+        save_fig_medical(base_path)
+        if extra_save_dir:
+            ensure_dirs(extra_save_dir)
+            save_fig_medical(os.path.join(extra_save_dir, fname))
+        plt.close()
+        _log(f"外部分层校准图已保存: {os.path.abspath(base_path)}.png" + (f" 及 {extra_save_dir}" if extra_save_dir else ""), "OK")
+
 def run_single_validation(target, mimic_auc_ref):
     """
     执行单个结局目标的 5 种模型验证
@@ -156,7 +261,7 @@ def run_single_validation(target, mimic_auc_ref):
     try:
         # 1. 加载资产 (此时 threshold_dict 包含各模型专属阈值)
         models, features, threshold_dict = load_external_validation_assets(target)
-        X_eicu, y_eicu = process_and_align_eicu(target, features)
+        X_eicu, y_eicu, renal_sub = process_and_align_eicu(target, features)
         y_eicu = np.array(y_eicu).astype(int) # 确保标签为整型
         
         # 1.1 加载 MIMIC 内部验证数据（用于 ROC 参考线）
@@ -217,6 +322,10 @@ def run_single_validation(target, mimic_auc_ref):
 
         # 8. 绘制 5 种模型 eICU 外部验证 ROC 对比图
         plot_roc_all_models(target, eicu_curves, mimic_ref=mimic_ref)
+        # 9. 绘制外部验证校准曲线（整体 + 按肾功能亚组），并保存到 results/main/figures 与 docs/figures/main
+        docs_fig_main = os.path.join(get_project_root(), "docs", "figures", "main")
+        plot_calibration_external(models, X_eicu, y_eicu, target, extra_save_dir=docs_fig_main)
+        plot_calibration_external_by_renal(models, X_eicu, y_eicu, renal_sub, target, extra_save_dir=docs_fig_main)
         return results
 
     except Exception as e:
