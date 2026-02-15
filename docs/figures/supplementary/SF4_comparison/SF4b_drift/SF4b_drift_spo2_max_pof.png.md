@@ -1,3 +1,6 @@
-# Supplementary Figure S4b 分布漂移（血氧饱和度（SpO2）最大值，持续性器官功能衰竭（POF））
+# 结果文件说明
 
-**Supplementary Figure S4b.** 血氧饱和度（SpO2）最大值（spo2_max）在持续性器官功能衰竭（POF）终点下的 MIMIC 开发队列与 eICU 外部验证队列分布对比。展示跨队列分布漂移（distributional drift），用于解释模型外推时的特征分布差异。该特征为 LASSO 入选变量。KS 检验详见 Supplementary Table S3。详见补充材料 S4。
+- 对应文件：`docs/figures/supplementary/SF4_comparison/SF4b_drift/SF4b_drift_spo2_max_pof.png`
+- 文件名：`SF4b_drift_spo2_max_pof.png`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

@@ -73,7 +73,7 @@ psql -h localhost -U your_username -d eicu
 
 ### 2.3.1 队列纳入与排除（与 MIMIC 对齐）
 
-当前脚本内已实现与 MIMIC 一致的纳入逻辑，便于在 Methods 中直接描述：
+当前脚本内已实现与 MIMIC 一致的纳入逻辑，便于在流程说明中直接记录：
 
 - **AP 诊断**：`diagnosisstring ILIKE '%pancreatit%' AND NOT ILIKE '%chronic%'`（排除慢性胰腺炎）  
 - **ICU 住院时间**：先按 `icu_los_hours >= 24` 过滤 ICU 入住（相当于 LOS≥1 天，**先 LOS**）  
@@ -82,9 +82,9 @@ psql -h localhost -U your_username -d eicu
 - **关键生理指标缺失**：在 10 项核心实验室指标中（creatinine_max, bun_max, lactate_max, pao2fio2ratio_min, ph_min, wbc_max, hemoglobin_min, bilirubin_total_max, sodium_max, albumin_min），若缺失比例 >80% 或 POF 无法判定（`pof IS NULL`），则排除。  
 - **P/F 比**：仅使用动脉血气 PaO2/FiO2，时间窗为入 ICU 后 0–24 小时；无 PaO2 时 P/F 记为 NULL，不再使用 SpO2 回退。
 
-实际纳入/排除人数可通过运行 `08_eicu_flowchart_counts.sql` 获得（详见 `docs/FLOWCHART_COUNTS.md`），对应稿件 Figure 1（CONSORT 流程图）。
+实际纳入/排除人数可通过运行 `08_eicu_flowchart_counts.sql` 获得（详见 `docs/FLOWCHART_COUNTS.md`），对应流程计数输出。
 
-### 2.4 运行流程图计数（Figure 1）
+### 2.4 运行流程计数
 
 主提取完成后，执行流程图计数脚本获取纳入排除人数：
 

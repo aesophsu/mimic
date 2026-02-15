@@ -1,4 +1,6 @@
-# Table 4b 精简版外部验证效能（附加分析）
+# 结果文件说明
 
-**Table 4b.** eICU 外部验证队列中精简版 XGBoost 的附加分析结果。特征数固定为 POF=3、28 天死亡=8、Composite=4（按开发集内特征重要性排序确定）。列含终点、算法（XGBoost-Slim）、K、特征组合、AUC（95% CI）、AUPRC、Brier、灵敏度、特异度、阈值与外部样本量。该表用于量化模型精简后相对主分析（Table 4）的性能变化，不替代主分析的多模型外部验证结果。
-
+- 对应文件：`docs/tables/main/Table4_external_validation_slim.csv`
+- 文件名：`Table4_external_validation_slim.csv`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

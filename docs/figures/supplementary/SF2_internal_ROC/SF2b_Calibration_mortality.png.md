@@ -1,3 +1,6 @@
-# Supplementary Figure S2b 内部校准曲线（28 天死亡）
+# 结果文件说明
 
-**Supplementary Figure S2b（次要终点 28 天死亡）.** MIMIC 测试集内部验证校准曲线（calibration curve）。评估各模型对次要终点 28 天全因死亡率预测概率与观察频率的一致性。Platt scaling 用于概率校准。详见补充材料 S2。
+- 对应文件：`docs/figures/supplementary/SF2_internal_ROC/SF2b_Calibration_mortality.png`
+- 文件名：`SF2b_Calibration_mortality.png`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

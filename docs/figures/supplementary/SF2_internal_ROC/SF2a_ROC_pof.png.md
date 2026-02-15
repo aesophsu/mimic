@@ -1,3 +1,6 @@
-# Supplementary Figure S2a 内部 ROC 曲线（POF）
+# 结果文件说明
 
-**Supplementary Figure S2a（主要终点 POF）.** MIMIC 测试集（20%）内部验证 ROC 曲线。主要终点持续性器官功能衰竭（POF）：SVM AUC 0.853，XGBoost 0.847，逻辑回归 0.846，Random Forest 0.842，Decision Tree 0.818。与 Table 3 内部验证效能对应。详见补充材料 S2。
+- 对应文件：`docs/figures/supplementary/SF2_internal_ROC/SF2a_ROC_pof.png`
+- 文件名：`SF2a_ROC_pof.png`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

@@ -1,3 +1,6 @@
-# Supplementary Figure S5a SHAP 力导向图（Composite）
+# 结果文件说明
 
-**Supplementary Figure S5a（混合终点 Composite）.** 个体 SHAP 力导向图（Force plot）。展示单个患者预测中，各特征对混合终点（POF 或 28 天死亡）预测的推动方向与大小。用于个体化可解释性及补充材料 S5 解读。
+- 对应文件：`docs/figures/supplementary/SF5_interpretation/SF5a_Force_composite.png`
+- 文件名：`SF5a_Force_composite.png`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

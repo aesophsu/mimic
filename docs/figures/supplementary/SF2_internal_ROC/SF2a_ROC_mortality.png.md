@@ -1,3 +1,6 @@
-# Supplementary Figure S2a 内部 ROC 曲线（28 天死亡）
+# 结果文件说明
 
-**Supplementary Figure S2a（次要终点 28 天死亡）.** MIMIC 测试集内部验证 ROC 曲线。次要终点 28 天全因死亡率：逻辑回归 AUC 0.876，XGBoost 0.865，SVM 0.864，Random Forest 0.861，Decision Tree 0.791。与 Table 3 内部验证效能对应。详见补充材料 S2。
+- 对应文件：`docs/figures/supplementary/SF2_internal_ROC/SF2a_ROC_mortality.png`
+- 文件名：`SF2a_ROC_mortality.png`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

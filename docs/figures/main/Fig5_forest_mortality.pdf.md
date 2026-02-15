@@ -1,3 +1,6 @@
-# Figure 5 森林图（28 天死亡）
+# 结果文件说明
 
-**Figure 5（次要终点 28 天死亡）.** 森林图展示逻辑回归 odds ratio（OR）及 95% 置信区间。次要终点 28 天全因死亡率入选特征：年龄 OR 1.96、血尿素氮最大值 OR 2.05、乳酸最大值 OR 1.50、凝血酶原时间最小值 OR 1.41、血红蛋白最小值 OR 0.63、恶性肿瘤 OR 1.74 等（见 Supplementary Table S1）。OR>1 为危险因素，OR<1 为保护因素。用于临床决策支持及与主文列线图配套解读。
+- 对应文件：`docs/figures/main/Fig5_forest_mortality.pdf`
+- 文件名：`Fig5_forest_mortality.pdf`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

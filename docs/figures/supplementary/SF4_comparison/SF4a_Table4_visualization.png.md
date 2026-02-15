@@ -1,3 +1,6 @@
-# Supplementary Figure S4a Table 4 可视化
+# 结果文件说明
 
-**Supplementary Figure S4a.** Table 4 外部验证效能的视觉化呈现。将 eICU 外部队列各模型在各终点（POF、28 天死亡、Composite）下的 AUC、Brier、灵敏度、特异度、AUPRC 等指标进行可视化（如雷达图或柱状图），便于跨模型、跨终点比较。用于补充材料 S4 及外部验证结果解读。
+- 对应文件：`docs/figures/supplementary/SF4_comparison/SF4a_Table4_visualization.png`
+- 文件名：`SF4a_Table4_visualization.png`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

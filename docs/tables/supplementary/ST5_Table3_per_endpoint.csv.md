@@ -1,3 +1,6 @@
-# Supplementary Table S5 内部验证明细（按终点）
+# 结果文件说明
 
-**Supplementary Table S5.** MIMIC 内部验证按终点展开的详细效能表。列含 Outcome、Algorithm、Group（Full Population、Subgroup No Renal）、AUC、Threshold、Sensitivity、Specificity、PPV、NPV、F1_Score、Accuracy。与 Table 3 对应，提供阳性/阴性预测值及准确度。无肾亚组（CKD=0）各模型 AUC 较全人群有所下降。
+- 对应文件：`docs/tables/supplementary/ST5_Table3_per_endpoint.csv`
+- 文件名：`ST5_Table3_per_endpoint.csv`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

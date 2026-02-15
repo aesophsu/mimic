@@ -1,3 +1,6 @@
-# Supplementary Figure S1a LASSO 路径诊断（28 天死亡）
+# 结果文件说明
 
-**Supplementary Figure S1a（次要终点 28 天死亡）.** LASSO 回归路径诊断图（正则化系数 λ 与系数路径）。展示次要终点 28 天全因死亡率下 12 个入选特征的系数随 λ 变化轨迹。入选特征包括年龄、血尿素氮最大值、凝血酶原时间最小值、乳酸最大值等。1-SE 准则用于确定最优 λ。详见补充材料 S1。
+- 对应文件：`docs/figures/supplementary/SF1_lasso/SF1a_diag_mortality.pdf`
+- 文件名：`SF1a_diag_mortality.pdf`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

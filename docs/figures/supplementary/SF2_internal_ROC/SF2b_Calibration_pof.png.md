@@ -1,3 +1,6 @@
-# Supplementary Figure S2b 内部校准曲线（POF）
+# 结果文件说明
 
-**Supplementary Figure S2b（主要终点 POF）.** MIMIC 测试集内部验证校准曲线（calibration curve）。评估各模型对主要终点持续性器官功能衰竭（POF）预测概率与观察频率的一致性。Platt scaling 用于概率校准。对角线表示完美校准。详见补充材料 S2。
+- 对应文件：`docs/figures/supplementary/SF2_internal_ROC/SF2b_Calibration_pof.png`
+- 文件名：`SF2b_Calibration_pof.png`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

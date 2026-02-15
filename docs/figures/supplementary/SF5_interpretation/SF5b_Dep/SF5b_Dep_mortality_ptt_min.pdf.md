@@ -1,3 +1,6 @@
-# Supplementary Figure S5b SHAP 依赖图（28 天全因死亡率，凝血酶原时间（PTT）最小值）
+# 结果文件说明
 
-**Supplementary Figure S5b.** SHAP 依赖图（dependence plot）。展示28 天全因死亡率终点下凝血酶原时间（PTT）最小值（ptt_min）与 SHAP 值的关系，反映该特征对预测的边际贡献及与其他特征的交互。用于个体化可解释性及补充材料 S5 解读。
+- 对应文件：`docs/figures/supplementary/SF5_interpretation/SF5b_Dep/SF5b_Dep_mortality_ptt_min.pdf`
+- 文件名：`SF5b_Dep_mortality_ptt_min.pdf`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

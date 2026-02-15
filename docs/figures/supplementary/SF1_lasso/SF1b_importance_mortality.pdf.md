@@ -1,3 +1,6 @@
-# Supplementary Figure S1b LASSO 特征重要性（28 天死亡）
+# 结果文件说明
 
-**Supplementary Figure S1b（次要终点 28 天死亡）.** LASSO 回归特征重要性排序。次要终点 28 天全因死亡率入选特征按 LASSO 系数绝对值排序：年龄、血尿素氮最大值、凝血酶原时间最小值、乳酸最大值、血红蛋白最小值等。与 Supplementary Table S2 及 Figure 4 SHAP 摘要图对应。详见补充材料 S1。
+- 对应文件：`docs/figures/supplementary/SF1_lasso/SF1b_importance_mortality.pdf`
+- 文件名：`SF1b_importance_mortality.pdf`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。

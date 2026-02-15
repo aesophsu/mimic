@@ -1,3 +1,6 @@
-# Table 2 肾亚组分析
+# 结果文件说明
 
-**Table 2.** MIMIC 开发队列按慢性肾脏病（CKD）分层的肾亚组基线特征与结局。有肾损害亚组（CKD=1）490 例，无肾损害亚组（CKD=0）605 例。有肾亚组 POF 发生率 66.3%，28 天全因死亡率 24.5%；无肾亚组分别为 26.9%、8.1%。两亚组在年龄、SOFA、APS-III、SAPS-II、OASIS、LODS、血尿素氮、血肌酐、乳酸、氧合指数（P/F 比）、pH、碳酸氢盐等均有显著差异（P<0.001）。缩写同 Table 1。
+- 对应文件：`docs/tables/main/Table2_renal_subgroup.csv`
+- 文件名：`Table2_renal_subgroup.csv`
+- 用途：用于结果归档、复核与定位。
+- 备注：本说明为工程文档，不提供论文写作模板。
