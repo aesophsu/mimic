@@ -28,3 +28,10 @@ logs/
 # 环境
 .env
 .env.local
+
+# 结果产物（可复现，不纳入版本控制）
+results/
+deploy_min/outputs/
+docs/figures/**/*.pdf
+docs/figures/**/*.png
+docs/figures/**/*.svg
