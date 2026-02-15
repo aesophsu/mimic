@@ -71,7 +71,7 @@
 │ 验证与解释层                                                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  03 Table 1 基线（MIMIC/eICU、SMD）  09 漂移分析  10 外部验证(Table 4, Fig2)  │
-│  10b 精简版外部验证(可选, k=3/8/4)                                           │
+│  10b 精简版外部验证(可选, 默认读取06c SHAP推荐k)                              │
 │  11 SHAP  12 DCA/校准(Fig3)  13 列线图/森林图(Fig5)                          │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -185,7 +185,7 @@ Figure 1 所需纳入排除人数由 `01_mimic_flowchart_counts.sql`、`08_eicu_
 - eICU 盲测，无任何再拟合
 - 使用 deploy_bundle 进行克隆式预处理
 - 报告 AUC、95% CI、校准度、DCA
-- 可选附加分析：`10b_external_validation_slim.py` 使用预设精简特征数（POF=3、Mortality=8、Composite=4）训练精简版 XGBoost，并在 eICU 上输出独立外部验证表 `Table4_external_validation_slim.csv`
+- 可选附加分析：`10b_external_validation_slim.py` 默认读取 `06c_shap_bootstrap_feature_pruning.py` 产出的 SHAP 推荐（`k_recommended` 与对应特征）训练精简版 XGBoost，并在 eICU 上输出独立外部验证表 `Table4_external_validation_slim.csv`
 
 ### 3.9 临床效用与可解释性
 
@@ -208,7 +208,7 @@ Figure 1 所需纳入排除人数由 `01_mimic_flowchart_counts.sql`、`08_eicu_
 | **Table 2** | `results/main/tables/Table2_renal_subgroup.csv` | 肾亚组分析（如适用） |
 | **Table 3** | `results/main/tables/Table3_performance.csv` | 内部验证效能（AUC、灵敏度、特异度、最优切点） |
 | **Table 4** | `results/main/tables/Table4_external_validation.csv` | 外部验证效能（eICU） |
-| **Table 4b（附加）** | `results/main/tables/Table4_external_validation_slim.csv` | 精简版 XGBoost 外部验证（默认 k=3/8/4） |
+| **Table 4b（附加）** | `results/main/tables/Table4_external_validation_slim.csv` | 精简版 XGBoost 外部验证（默认读取 06c SHAP 推荐 k） |
 
 ### 4.2 主文插图（Main Text Figures）
 
@@ -275,7 +275,7 @@ uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 | | 03 | `cd scripts/audit_eval && uv run python 03_table1_baseline.py`（全流程：含 eICU 列） |
 | | 09 | `cd scripts/audit_eval && uv run python 09_cross_cohort_audit.py` |
 | | 10 | `cd scripts/audit_eval && uv run python 10_external_validation_perf.py` |
-| | 10b | `cd scripts/audit_eval && uv run python 10b_external_validation_slim.py`（可选，默认 k=3/8/4） |
+| | 10b | `cd scripts/audit_eval && uv run python 10b_external_validation_slim.py`（可选，默认读取 06c SHAP 推荐 k） |
 | **解释** | 11 | `cd scripts/audit_eval && uv run python 11_model_interpretation_shap.py` |
 | | 12 | `cd scripts/audit_eval && uv run python 12_clinical_calibration_dca.py` |
 | | 13 | `cd scripts/audit_eval && uv run python 13_nomogram_odds_ratio.py` |
@@ -383,7 +383,7 @@ uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 │   │   │   ├── Table2_renal_subgroup.csv     # 肾亚组分析
 │   │   │   ├── Table3_performance.csv        # 内部验证效能（AUC、灵敏度、特异度、最优切点）
 │   │   │   ├── Table4_external_validation.csv # 外部验证效能（eICU）
-│   │   │   └── Table4_external_validation_slim.csv # 附加：精简版外部验证（k=3/8/4）
+│   │   │   └── Table4_external_validation_slim.csv # 附加：精简版外部验证（默认读取 06c SHAP 推荐 k）
 │   │   └── figures/
 │   │       ├── Fig1_missing_heatmap.{pdf,png}           # 缺失模式热图
 │   │       ├── Fig2_ROC_external_{pof,mortality,composite}.{pdf,png}  # 外部验证 ROC

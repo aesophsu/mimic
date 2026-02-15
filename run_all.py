@@ -3,7 +3,7 @@
 一键运行全流程（除 SQL 部分）
 
 执行顺序（Python 流程 01-13，SQL 01/08 单独执行）：
-  I. MIMIC 阶段: 01 → 02 → 03(仅 MIMIC) → 04(可选) → 05 → 06 → [06b可选] → 07
+  I. MIMIC 阶段: 01 → 02 → 03(仅 MIMIC) → 04(可选) → 05 → 06 → 06c(默认) → [06b可选] → 07
   II. eICU 阶段: 08 → 03(含 eICU 列) → 09 → 10 → [10b可选]
   III. 解释阶段: 11 → 12 → 13
 
@@ -16,7 +16,8 @@
 用法：
   uv run python run_all.py              # 全流程，遇错即停
   uv run python run_all.py --skip-04   # 跳过可选审计
-  uv run python run_all.py --with-xgb-pruning  # 开启 06b（仅开发集内 XGBoost 变量筛选）
+  uv run python run_all.py --with-xgb-pruning  # 开启 06b（附加 legacy：XGBoost 重要性筛选）
+  uv run python run_all.py --without-shap-pruning # 关闭默认 06c（仅开发集内 SHAP+Bootstrap 变量筛选）
   uv run python run_all.py --mimic-only   # 仅 MIMIC 阶段 (01-07)
   uv run python run_all.py --eicu-only    # 仅 eICU+解释 (08-13)
 """
@@ -38,6 +39,7 @@ _STEP_DEFS = {
     "05": ("scripts/modeling", "05_feature_selection_lasso.py", "LASSO 特征选择"),
     "06": ("scripts/modeling", "06_model_training_main.py", "模型训练"),
     "06b": ("scripts/modeling", "06b_xgb_internal_feature_pruning.py", "XGBoost 开发集内变量筛选（可选）"),
+    "06c": ("scripts/modeling", "06c_shap_bootstrap_feature_pruning.py", "SHAP+Bootstrap 开发集内变量筛选（可选）"),
     "07": ("scripts/modeling", "07_optimal_cutoff_analysis.py", "最优切点分析"),
     "08": ("scripts/preprocess", "08_eicu_alignment_cleaning.py", "eICU 对齐清洗"),
     "09": ("scripts/audit_eval", "09_cross_cohort_audit.py", "跨队列漂移审计"),
@@ -59,7 +61,7 @@ def check_prereq(step_id: str) -> tuple[bool, str]:
     mimic_raw = os.path.join(PROJECT_ROOT, "data/raw/mimic_raw_data.csv")
     eicu_raw = os.path.join(PROJECT_ROOT, "data/raw/eicu_raw_data.csv")
     mimic_scale = os.path.join(PROJECT_ROOT, "data/cleaned/mimic_raw_scale.csv")
-    mimic_steps = {"01", "02", "03", "04", "05", "06", "06b", "07"}
+    mimic_steps = {"01", "02", "03", "04", "05", "06", "06b", "06c", "07"}
     eicu_steps = {"08", "09", "10", "11", "12", "13"}
     if step_id in mimic_steps and not os.path.exists(mimic_raw):
         return False, f"缺少 {mimic_raw}，请先执行 Step 01 SQL"
@@ -102,22 +104,30 @@ def main():
     parser.add_argument("--skip-04", action="store_true", help="跳过可选审计 Step 04")
     parser.add_argument("--mimic-only", action="store_true", help="仅运行 MIMIC 阶段 (01-07)")
     parser.add_argument("--eicu-only", action="store_true", help="仅运行 eICU+解释 (08-13)")
-    parser.add_argument("--with-xgb-pruning", action="store_true", help="启用可选 Step 06b（仅开发集内 XGBoost 变量筛选）")
-    parser.add_argument("--with-slim-external", action="store_true", help="启用可选 Step 10b（k=3/4/8 精简版外部验证）")
+    parser.add_argument("--with-xgb-pruning", action="store_true", help="启用可选 Step 06b（附加 legacy：XGBoost 重要性筛选）")
+    parser.add_argument("--without-shap-pruning", action="store_true", help="关闭默认 Step 06c（开发集内 SHAP+Bootstrap 变量筛选）")
+    parser.add_argument("--with-slim-external", action="store_true", help="启用可选 Step 10b（默认读取 06c SHAP 推荐 k 的精简版外部验证）")
     parser.add_argument("--continue-on-error", action="store_true", help="遇错继续执行后续步骤")
     args = parser.parse_args()
 
-    # mimic-only: 03 在 02 后（MIMIC-only Table 1）
-    MIMIC_STEPS = ["01", "02", "03", "04", "05", "06", "07"]
-    # 全流程/eicu-only: 03 在 08 后（完整 Table 1 含 eICU 列）
-    FULL_STEPS = ["01", "02", "04", "05", "06", "07", "08", "03", "09", "10", "11", "12", "13"]
+    # mimic-only: 03 在 02 后（MIMIC-only Table 1）；06c 默认纳入精简筛选
+    MIMIC_STEPS = ["01", "02", "03", "04", "05", "06", "06c", "07"]
+    # 全流程/eicu-only: 03 在 08 后（完整 Table 1 含 eICU 列）；06c 默认纳入
+    FULL_STEPS = ["01", "02", "04", "05", "06", "06c", "07", "08", "03", "09", "10", "11", "12", "13"]
     EICU_STEPS = ["08", "03", "09", "10", "11", "12", "13"]
 
-    if args.with_xgb_pruning:
-        # 06b 仅作为附加分析，插入在 06 与 07 之间，不影响主流程默认行为
+    if args.without_shap_pruning:
+        # 显式关闭默认 06c
         for seq in (MIMIC_STEPS, FULL_STEPS):
-            if "06" in seq and "06b" not in seq:
-                seq.insert(seq.index("06") + 1, "06b")
+            if "06c" in seq:
+                seq.remove("06c")
+
+    if args.with_xgb_pruning:
+        # 06b 作为附加 legacy 分析，默认插在 06c 后；若 06c 被关闭则插在 06 后
+        for seq in (MIMIC_STEPS, FULL_STEPS):
+            anchor = "06c" if "06c" in seq else "06"
+            if anchor in seq and "06b" not in seq:
+                seq.insert(seq.index(anchor) + 1, "06b")
 
     if args.with_slim_external:
         # 10b 仅作为附加分析，插入在 10 与 11 之间，不影响主流程默认行为

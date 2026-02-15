@@ -110,7 +110,7 @@ eICU 原始表与 MIMIC 特征空间对齐（列名、单位、时间窗已由 S
 
 eICU 队列使用 deploy_bundle 进行预处理，无任何再拟合。报告 AUC（95% CI）、Brier、灵敏度、特异度、AUPRC 及阈值。跨队列分布漂移分析见 Supplementary Table S3（`docs/tables/supplementary/ST3_drift_analysis.csv`）及补充材料 S4。
 
-作为附加分析，我们增加了精简版 XGBoost 外部验证（`scripts/audit_eval/10b_external_validation_slim.py`）：基于开发集内特征重要性排序固定特征数（POF=3、28 天死亡=8、Composite=4），在 MIMIC 训练集重训并校准精简模型，在 MIMIC 测试集用 Youden 指数确定阈值后固定到 eICU 队列评估。结果单独输出为 `results/main/tables/Table4_external_validation_slim.csv`，不替代主分析的多模型 Table 4。
+作为附加分析，我们增加了精简版 XGBoost 外部验证（`scripts/audit_eval/10b_external_validation_slim.py`）：默认读取 `06c_shap_bootstrap_feature_pruning.py` 生成的 SHAP 推荐文件（`xgb_shap_pruning_recommendation.json` + `xgb_shap_pruning_curve.csv`），按 `k_recommended` 与对应特征在 MIMIC 训练集重训并校准精简模型，在 MIMIC 测试集用 Youden 指数确定阈值后固定到 eICU 队列评估。结果单独输出为 `results/main/tables/Table4_external_validation_slim.csv`，不替代主分析的多模型 Table 4。
 
 ---
 

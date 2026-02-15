@@ -1,11 +1,14 @@
 import json
 import os
+import io
 from pathlib import Path
 from typing import Any
 
 import joblib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import shap
 import streamlit as st
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import accuracy_score, roc_auc_score
@@ -32,7 +35,7 @@ TARGETS = {
 FAST_TOPN_BY_TARGET = {
     "pof": 3,
     "composite": 4,
-    "mortality": 8,
+    "mortality": 4,
 }
 
 # 统一换算到模型训练使用的标准单位（base_unit）
@@ -103,6 +106,7 @@ I18N = {
         "mode_smart": "Smart (recommended)",
         "mode_full": "Full (12 variables)",
         "smart_hint": "Show core variables first; other variables are optional and can be imputed if left blank.",
+        "smart_source": "Smart subset source: {source} (k={k})",
         "optional_vars": "Optional variables",
         "unit": "Unit",
         "model_unit": "Model unit: {unit}",
@@ -114,6 +118,21 @@ I18N = {
         "explain_none": "No obvious out-of-range signal from the provided values.",
         "explain_high": "{name} is above reference ({value} vs {lo}-{hi}).",
         "explain_low": "{name} is below reference ({value} vs {lo}-{hi}).",
+        "shap_title": "Individual SHAP Explanation",
+        "shap_run": "Generate SHAP plots",
+        "shap_note": "Model-based feature attribution for this single case.",
+        "shap_mode_label": "SHAP mode",
+        "shap_mode_full": "Full-model SHAP",
+        "shap_mode_smart": "Smart-subset SHAP",
+        "shap_mode_full_note": "Explain prediction with the full deployed model.",
+        "shap_mode_smart_note": "Explain prediction with a subset model retrained on development train set using smart features.",
+        "shap_mode_smart_unavailable": "Smart-subset SHAP is unavailable because development train/test files are not bundled.",
+        "shap_mode_source": "Subset source: {source} (k={k})",
+        "shap_waterfall": "Waterfall plot",
+        "shap_force": "Force plot",
+        "shap_top": "Top feature contributions",
+        "shap_failed": "SHAP generation failed: {err}",
+        "shap_stale": "Inputs changed. Click to regenerate SHAP plots.",
         "missing_rate_all": "Missing rate (all model features): {pct}% ({miss}/{total})",
         "missing_rate_core": "Missing rate (core features): {pct}% ({miss}/{total})",
         "missing_hint": "Higher missing rate means stronger dependence on imputation.",
@@ -194,6 +213,7 @@ I18N = {
         "mode_smart": "精简模式（推荐）",
         "mode_full": "完整模式（12变量）",
         "smart_hint": "优先填写核心变量，其他变量可留空由模型插补。",
+        "smart_source": "精简特征来源: {source}（k={k}）",
         "optional_vars": "可选变量",
         "unit": "单位",
         "model_unit": "模型单位: {unit}",
@@ -205,6 +225,21 @@ I18N = {
         "explain_none": "当前已填值未出现明显超出参考范围的信号。",
         "explain_high": "{name} 高于参考范围（{value}，参考 {lo}-{hi}）。",
         "explain_low": "{name} 低于参考范围（{value}，参考 {lo}-{hi}）。",
+        "shap_title": "个体 SHAP 解释",
+        "shap_run": "生成 SHAP 图",
+        "shap_note": "针对当前病例的模型特征归因解释。",
+        "shap_mode_label": "SHAP 模式",
+        "shap_mode_full": "全模型 SHAP",
+        "shap_mode_smart": "精简子集 SHAP",
+        "shap_mode_full_note": "使用完整部署模型解释本次预测。",
+        "shap_mode_smart_note": "使用精简特征在开发集重训的子模型解释本次预测。",
+        "shap_mode_smart_unavailable": "当前部署未包含开发集训练/测试文件，精简子集 SHAP 不可用。",
+        "shap_mode_source": "子集来源: {source}（k={k}）",
+        "shap_waterfall": "瀑布图",
+        "shap_force": "Force 图",
+        "shap_top": "主要贡献特征",
+        "shap_failed": "SHAP 生成失败: {err}",
+        "shap_stale": "输入已变更，请重新点击生成 SHAP 图。",
         "missing_rate_all": "缺失率（全部模型特征）: {pct}%（{miss}/{total}）",
         "missing_rate_core": "缺失率（核心特征）: {pct}%（{miss}/{total}）",
         "missing_hint": "缺失率越高，结果越依赖插补。",
@@ -571,6 +606,155 @@ def predict_risk(bundle: dict[str, Any], input_values: dict[str, float | None]) 
     return proba
 
 
+@st.cache_data
+def load_shap_background(target: str, features_key: tuple[str, ...], max_rows: int = 40) -> pd.DataFrame:
+    features = list(features_key)
+    bundle = load_bundle(target)
+    for path in [TEST_PATH, TRAIN_PATH]:
+        if not os.path.exists(path):
+            continue
+        try:
+            df = pd.read_csv(path)
+            if not set(features).issubset(set(df.columns)):
+                continue
+            x_raw = df[features].dropna().head(max_rows)
+            if len(x_raw) < 5:
+                continue
+            x_bg = bundle["scaler"].transform(x_raw)
+            return pd.DataFrame(x_bg, columns=features)
+        except Exception:
+            continue
+    fallback_rows = max(5, min(20, max_rows))
+    return pd.DataFrame(np.zeros((fallback_rows, len(features))), columns=features)
+
+
+def build_single_case_shap_explanation(
+    target: str,
+    bundle: dict[str, Any],
+    input_values: dict[str, float | None],
+    feat_dict: dict[str, Any],
+    lang_key: str,
+    feature_subset: list[str] | None = None,
+) -> shap.Explanation:
+    if not feature_subset:
+        features = list(bundle["features"])
+        x_case = pd.DataFrame(preprocess_single_row(bundle, input_values), columns=features)
+        x_bg = load_shap_background(target, tuple(features), max_rows=40)
+        model = bundle["best_model"]
+        explainer = shap.Explainer(model.predict_proba, x_bg)
+        sv = explainer(x_case)
+        exp = sv[0, :, 1]
+        display_names = [feature_title(f, feat_dict.get(f, {}), lang_key) for f in features]
+        base_value = float(np.array(exp.base_values).reshape(-1)[0])
+        return shap.Explanation(
+            values=np.array(exp.values),
+            base_values=base_value,
+            data=np.array(exp.data),
+            feature_names=display_names,
+        )
+
+    if not DYNAMIC_DATA_AVAILABLE:
+        raise FileNotFoundError("train/test files are unavailable for subset SHAP")
+    feats = [f for f in feature_subset if f in bundle.get("features", [])]
+    if len(feats) < 2:
+        raise ValueError("subset SHAP requires at least 2 features")
+
+    df_train = pd.read_csv(TRAIN_PATH)
+    y_train = df_train[target].dropna().astype(int)
+    x_train_raw = df_train.loc[y_train.index, feats]
+
+    scaler = StandardScaler()
+    x_train_s = scaler.fit_transform(x_train_raw)
+    params = _extract_xgb_params(bundle)
+    xgb = XGBClassifier(**params)
+    model_sub = CalibratedClassifierCV(xgb, cv=3, method="isotonic", n_jobs=1)
+    model_sub.fit(x_train_s, y_train.values)
+
+    value_trace = compute_value_trace(bundle, input_values, list(bundle["features"]))
+    x_case_raw = pd.DataFrame([[value_trace[f]["value"] for f in feats]], columns=feats)
+    x_case = pd.DataFrame(scaler.transform(x_case_raw), columns=feats)
+
+    x_bg_raw = None
+    for path in [TEST_PATH, TRAIN_PATH]:
+        if not os.path.exists(path):
+            continue
+        try:
+            df = pd.read_csv(path)
+            if not set(feats).issubset(df.columns):
+                continue
+            cand = df[feats].dropna().head(40)
+            if len(cand) >= 5:
+                x_bg_raw = cand
+                break
+        except Exception:
+            continue
+    if x_bg_raw is None:
+        x_bg_raw = pd.DataFrame(np.zeros((20, len(feats))), columns=feats)
+    x_bg = pd.DataFrame(scaler.transform(x_bg_raw), columns=feats)
+
+    explainer = shap.Explainer(model_sub.predict_proba, x_bg)
+    sv = explainer(x_case)
+    exp = sv[0, :, 1]
+    display_names = [feature_title(f, feat_dict.get(f, {}), lang_key) for f in feats]
+    base_value = float(np.array(exp.base_values).reshape(-1)[0])
+    return shap.Explanation(
+        values=np.array(exp.values),
+        base_values=base_value,
+        data=np.array(exp.data),
+        feature_names=display_names,
+    )
+
+
+def render_shap_images(exp: shap.Explanation, max_display: int = 12) -> tuple[bytes, bytes]:
+    buf_wf = io.BytesIO()
+    shap.plots.waterfall(exp, max_display=max_display, show=False)
+    plt.tight_layout()
+    plt.savefig(buf_wf, format="png", dpi=220, bbox_inches="tight")
+    plt.close()
+
+    buf_force = io.BytesIO()
+    safe_names = []
+    for i, name in enumerate(list(exp.feature_names)):
+        s = str(name).replace("×", "x").replace("⁹", "9").replace("µ", "u")
+        s = s.encode("ascii", "ignore").decode("ascii").strip()
+        safe_names.append(s if s else f"f{i+1}")
+    try:
+        plt.figure(figsize=(12, 2.8), dpi=180)
+        shap.force_plot(
+            exp.base_values,
+            exp.values,
+            exp.data,
+            feature_names=safe_names,
+            matplotlib=True,
+            show=False,
+            text_rotation=12,
+            contribution_threshold=0.03,
+        )
+        plt.tight_layout()
+        plt.savefig(buf_force, format="png", dpi=220, bbox_inches="tight")
+        plt.close()
+    except Exception:
+        plt.close()
+        plt.figure(figsize=(10, 2.4), dpi=180)
+        plt.axis("off")
+        plt.text(0.01, 0.5, "Force plot unavailable for current labels.", fontsize=11, va="center")
+        plt.tight_layout()
+        plt.savefig(buf_force, format="png", dpi=220, bbox_inches="tight")
+        plt.close()
+    return buf_wf.getvalue(), buf_force.getvalue()
+
+
+def top_shap_contributions(exp: shap.Explanation, top_n: int = 5) -> list[str]:
+    values = np.array(exp.values)
+    names = list(exp.feature_names)
+    idx = np.argsort(np.abs(values))[::-1][:top_n]
+    lines = []
+    for i in idx:
+        sign = "+" if values[i] >= 0 else "-"
+        lines.append(f"{names[i]}: {sign}{abs(values[i]):.3f}")
+    return lines
+
+
 def feature_title(feature: str, meta: dict[str, Any], lang: str) -> str:
     if lang == "zh":
         label = (meta or {}).get("display_name_cn") or (meta or {}).get("display_name") or feature
@@ -680,6 +864,56 @@ def rank_features_for_display(bundle: dict[str, Any], top_n: int = 6) -> tuple[l
     core = features[:top_n]
     optional = features[top_n:]
     return core, optional
+
+
+def _load_shap_recommendation(target: str) -> dict[str, Any] | None:
+    rec_path = os.path.join(MODELS_DIR, target, "xgb_shap_pruning_recommendation.json")
+    if not os.path.exists(rec_path):
+        return None
+    try:
+        with open(rec_path, "r", encoding="utf-8") as f:
+            rec = json.load(f)
+        return rec if isinstance(rec, dict) else None
+    except Exception:
+        return None
+
+
+def _get_shap_features_for_k(target: str, k: int) -> list[str]:
+    curve_path = os.path.join(MODELS_DIR, target, "xgb_shap_pruning_curve.csv")
+    if not os.path.exists(curve_path):
+        return []
+    try:
+        df = pd.read_csv(curve_path)
+        if "k" not in df.columns or "features" not in df.columns or df.empty:
+            return []
+        df["k"] = df["k"].astype(int)
+        row = df[df["k"] == int(k)]
+        if row.empty:
+            return []
+        feats = str(row.iloc[0]["features"]).split(";")
+        return [x.strip() for x in feats if x.strip()]
+    except Exception:
+        return []
+
+
+def get_smart_subset_features(target: str, bundle: dict[str, Any]) -> tuple[list[str], list[str], str, int]:
+    features = list(bundle.get("features", []))
+    fallback_k = int(FAST_TOPN_BY_TARGET.get(target, 6))
+
+    rec = _load_shap_recommendation(target)
+    if rec and "k_recommended" in rec:
+        try:
+            k_rec = int(rec["k_recommended"])
+            shap_feats = _get_shap_features_for_k(target, k_rec)
+            shap_feats = [f for f in shap_feats if f in features]
+            if shap_feats:
+                optional = [f for f in features if f not in shap_feats]
+                return shap_feats, optional, "SHAP recommendation", len(shap_feats)
+        except Exception:
+            pass
+
+    core, optional = rank_features_for_display(bundle, top_n=fallback_k)
+    return core, optional, "XGBoost importance fallback", len(core)
 
 
 def render_feature_inputs(
@@ -1146,8 +1380,7 @@ def main() -> None:
 
     feat_dict = load_feature_dict()
     features = list(bundle["features"])
-    top_n = FAST_TOPN_BY_TARGET.get(target, 6)
-    core_features, optional_features = rank_features_for_display(bundle, top_n=top_n)
+    core_features, optional_features, smart_source, smart_k = get_smart_subset_features(target, bundle)
     feat_weights = get_feature_importance_weights(bundle, features)
     bench = load_benchmark_metrics(target)
 
@@ -1185,6 +1418,7 @@ def main() -> None:
         st.markdown(f"**{L['group_title']}**")
         if mode == L["mode_smart"]:
             st.caption(L["smart_hint"])
+            st.caption(L["smart_source"].format(source=smart_source, k=smart_k))
             if target == "composite":
                 st.caption(L["composite_fast_note"])
             render_grouped_inputs(
@@ -1221,7 +1455,11 @@ def main() -> None:
         submitted = st.form_submit_button(L["submit"], type="primary", use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
+    result_ready_key = f"result_ready_{target}_{lang_key}"
     if submitted:
+        st.session_state[result_ready_key] = True
+
+    if submitted or st.session_state.get(result_ready_key, False):
         if parse_errors:
             st.error(L["parse_failed"].format(errors="\n- ".join(parse_errors)))
             st.stop()
@@ -1271,6 +1509,74 @@ def main() -> None:
                     st.markdown(f"- {line}")
             else:
                 st.caption(L["explain_none"])
+            st.markdown(f"**{L['shap_title']}**")
+            st.caption(L["shap_note"])
+            shap_mode_key = f"shap_mode_{target}_{lang_key}"
+            shap_mode_sync_key = f"shap_mode_sync_{target}_{lang_key}"
+            desired_mode = (
+                L["shap_mode_smart"]
+                if (mode == L["mode_smart"] and DYNAMIC_DATA_AVAILABLE)
+                else L["shap_mode_full"]
+            )
+            if st.session_state.get(shap_mode_sync_key) != mode:
+                st.session_state[shap_mode_key] = desired_mode
+                st.session_state[shap_mode_sync_key] = mode
+
+            ctrl_col, note_col = st.columns([1.3, 2.0])
+            with ctrl_col:
+                shap_mode = st.radio(
+                    L["shap_mode_label"],
+                    options=[L["shap_mode_full"], L["shap_mode_smart"]],
+                    horizontal=True,
+                    key=shap_mode_key,
+                    label_visibility="visible",
+                )
+            with note_col:
+                use_subset_shap = shap_mode == L["shap_mode_smart"]
+                if use_subset_shap:
+                    st.caption(L["shap_mode_smart_note"])
+                    st.caption(L["shap_mode_source"].format(source=smart_source, k=smart_k))
+                    if not DYNAMIC_DATA_AVAILABLE:
+                        st.caption(L["shap_mode_smart_unavailable"])
+                else:
+                    st.caption(L["shap_mode_full_note"])
+
+            shap_feats = core_features if use_subset_shap else features
+            shap_sig = (shap_mode, tuple((f, user_values.get(f)) for f in shap_feats))
+            shap_state_key = f"shap_payload_{target}_{lang_key}"
+            if st.button(L["shap_run"], key=f"run_shap_{target}_{lang_key}"):
+                try:
+                    if use_subset_shap and not DYNAMIC_DATA_AVAILABLE:
+                        raise FileNotFoundError(L["shap_mode_smart_unavailable"])
+                    exp = build_single_case_shap_explanation(
+                        target=target,
+                        bundle=bundle,
+                        input_values=user_values,
+                        feat_dict=feat_dict,
+                        lang_key=lang_key,
+                        feature_subset=core_features if use_subset_shap else None,
+                    )
+                    img_wf, img_force = render_shap_images(exp, max_display=min(12, len(shap_feats)))
+                    st.session_state[shap_state_key] = {
+                        "sig": shap_sig,
+                        "waterfall": img_wf,
+                        "force": img_force,
+                        "top": top_shap_contributions(exp, top_n=5),
+                    }
+                except Exception as err:
+                    st.error(L["shap_failed"].format(err=err))
+
+            payload = st.session_state.get(shap_state_key)
+            if payload:
+                if payload.get("sig") == shap_sig:
+                    st.markdown(f"- **{L['shap_top']}**")
+                    for line in payload.get("top", []):
+                        st.markdown(f"- {line}")
+                    c1, c2 = st.columns(2)
+                    c1.image(payload["waterfall"], caption=L["shap_waterfall"], use_container_width=True)
+                    c2.image(payload["force"], caption=L["shap_force"], use_container_width=True)
+                else:
+                    st.caption(L["shap_stale"])
 
         with t2:
             st.caption(L["completeness_weighted"].format(pct=f"{completeness_pct:.1f}"))
