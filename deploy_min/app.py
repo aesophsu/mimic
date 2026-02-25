@@ -313,12 +313,43 @@ def apply_custom_theme() -> None:
                 --risk-low: #2f855a;
                 --risk-mid: #c27c2c;
                 --risk-high: #c53030;
+                --input-text: #14273d;
+                --panel-title-text: #1e3b5e;
+                --metric-value-text: #193b5f;
+                --muted-note: #6b7280;
+                --footer-bg: #f8f9fb;
+                --footer-border: #d9dbe0;
+                --footer-text: #2b2f36;
+            }
+
+            html[data-theme="dark"], body[data-theme="dark"] {
+                --bg-main: #0f1722;
+                --bg-card: #111c2a;
+                --text-main: #e6edf5;
+                --text-sub: #b6c4d4;
+                --border-soft: #314154;
+                --accent: #6ba7d8;
+                --accent-2: #8ec5f3;
+                --input-text: #edf4fb;
+                --panel-title-text: #dbe9f8;
+                --metric-value-text: #eef5ff;
+                --muted-note: #b8c6d6;
+                --footer-bg: #0f1722;
+                --footer-border: #2d3a4c;
+                --footer-text: #cfd9e6;
             }
 
             [data-testid="stAppViewContainer"] {
                 background:
                     radial-gradient(circle at 20% 0%, #dfe8f3 0%, rgba(223,232,243,0) 40%),
                     radial-gradient(circle at 95% 10%, #edf3f9 0%, rgba(237,243,249,0) 35%),
+                    var(--bg-main);
+            }
+            html[data-theme="dark"] [data-testid="stAppViewContainer"],
+            body[data-theme="dark"] [data-testid="stAppViewContainer"] {
+                background:
+                    radial-gradient(circle at 15% 0%, rgba(68, 112, 161, 0.14) 0%, rgba(68,112,161,0) 45%),
+                    radial-gradient(circle at 88% 8%, rgba(91, 137, 185, 0.10) 0%, rgba(91,137,185,0) 35%),
                     var(--bg-main);
             }
 
@@ -407,13 +438,18 @@ def apply_custom_theme() -> None:
                 font-size: 0.98rem;
                 font-weight: 700;
                 margin: 6px 0 8px 0;
-                color: #1e3b5e;
+                color: var(--panel-title-text);
                 letter-spacing: 0.01em;
             }
 
             [data-testid="stSidebar"] {
                 border-right: 1px solid #d4dfeb;
                 background: linear-gradient(180deg, #f2f6fb 0%, #eaf1f8 100%);
+            }
+            html[data-theme="dark"] [data-testid="stSidebar"],
+            body[data-theme="dark"] [data-testid="stSidebar"] {
+                border-right: 1px solid var(--border-soft);
+                background: linear-gradient(180deg, #101a28 0%, #0d1622 100%);
             }
 
             .lang-top {
@@ -433,17 +469,17 @@ def apply_custom_theme() -> None:
             .stTextInput input,
             .stNumberInput input,
             .stTextArea textarea {
-                color: #14273d !important;
-                -webkit-text-fill-color: #14273d !important;
-                background-color: #ffffff !important;
+                color: var(--input-text) !important;
+                -webkit-text-fill-color: var(--input-text) !important;
+                background-color: var(--bg-card) !important;
             }
 
             .stSelectbox div[data-baseweb="select"] > div {
-                color: #14273d !important;
-                background-color: #ffffff !important;
+                color: var(--input-text) !important;
+                background-color: var(--bg-card) !important;
             }
             .stSelectbox div[data-baseweb="select"] span {
-                color: #14273d !important;
+                color: var(--input-text) !important;
             }
 
             /* 单选框、提示、expander 标题 */
@@ -451,18 +487,28 @@ def apply_custom_theme() -> None:
             [data-testid="stCaptionContainer"] *,
             [data-testid="stExpander"] summary,
             [data-testid="stExpander"] summary * {
-                color: #27405d !important;
+                color: var(--text-sub) !important;
+            }
+            [data-testid="stExpander"] summary svg,
+            [data-testid="stCaptionContainer"] svg {
+                color: var(--text-sub) !important;
+                fill: currentColor !important;
+                stroke: currentColor !important;
             }
 
             /* DataFrame 文本 */
             [data-testid="stDataFrame"] * {
-                color: #1f334d !important;
+                color: var(--text-main) !important;
             }
 
             [data-testid="stMetricValue"] {
                 font-family: "IBM Plex Mono", monospace;
                 font-weight: 600;
-                color: #193b5f;
+                color: var(--metric-value-text);
+            }
+            [data-testid="stMetricLabel"] *,
+            [data-testid="stMetricDelta"] * {
+                color: var(--text-sub) !important;
             }
 
             .risk-chip {
@@ -484,7 +530,7 @@ def apply_custom_theme() -> None:
                 border-radius: 12px;
                 padding: 12px 14px 8px 14px;
                 border: 1px solid var(--border-soft);
-                background: #ffffff;
+                background: var(--bg-card);
                 box-shadow: 0 6px 16px rgba(26, 45, 71, 0.08);
                 margin-top: 8px;
             }
@@ -492,16 +538,43 @@ def apply_custom_theme() -> None:
                 font-size: 0.95rem;
                 font-weight: 700;
                 margin: 0 0 8px 0;
-                color: #1e3b5e;
+                color: var(--panel-title-text);
             }
             .summary-note {
-                color: #5f7289;
+                color: var(--text-sub);
                 font-size: 0.82rem;
                 margin-top: 2px;
             }
             .section-gap {
                 margin-top: 6px;
                 margin-bottom: 2px;
+            }
+            html[data-theme="dark"] .panel-card,
+            body[data-theme="dark"] .panel-card,
+            html[data-theme="dark"] .result-card,
+            body[data-theme="dark"] .result-card {
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+            }
+            html[data-theme="dark"] .stButton > button,
+            body[data-theme="dark"] .stButton > button,
+            html[data-theme="dark"] .stForm button[kind="primary"],
+            body[data-theme="dark"] .stForm button[kind="primary"] {
+                border-color: #5d93c4 !important;
+                background: linear-gradient(135deg, #2f6da8 0%, #24517b 100%) !important;
+                color: #f5f9ff !important;
+            }
+            html[data-theme="dark"] [data-baseweb="tab-list"] button,
+            body[data-theme="dark"] [data-baseweb="tab-list"] button {
+                color: var(--text-sub) !important;
+            }
+            html[data-theme="dark"] [data-baseweb="tab-list"] button[aria-selected="true"],
+            body[data-theme="dark"] [data-baseweb="tab-list"] button[aria-selected="true"] {
+                color: var(--text-main) !important;
+            }
+            html[data-theme="dark"] [data-testid="stMarkdownContainer"] code,
+            body[data-theme="dark"] [data-testid="stMarkdownContainer"] code {
+                color: #d6eaff !important;
+                background: rgba(99, 139, 184, 0.15);
             }
         </style>
         """,
@@ -993,7 +1066,7 @@ def render_feature_inputs(
                     converted = convert_to_model_unit(feat, parsed, unit)
                     user_values[feat] = converted
                     col.markdown(
-                        f"<div style='color:#6b7280;font-size:12px;margin-top:-2px;'>"
+                        f"<div style='color:var(--muted-note);font-size:12px;margin-top:-2px;'>"
                         f"{L['converted_value'].format(value=fmt_num(converted), unit=ucfg['base_unit'])}"
                         f"</div>",
                         unsafe_allow_html=True,
@@ -1002,7 +1075,7 @@ def render_feature_inputs(
                         lo_u = convert_model_to_selected_unit(feat, float(lo_m), unit)
                         hi_u = convert_model_to_selected_unit(feat, float(hi_m), unit)
                         col.markdown(
-                            f"<div style='color:#6b7280;font-size:12px;margin-top:-6px;'>"
+                            f"<div style='color:var(--muted-note);font-size:12px;margin-top:-6px;'>"
                             f"{L['normal_range'].format(lo=fmt_num(lo_u), hi=fmt_num(hi_u), unit=unit)}"
                             f"</div>",
                             unsafe_allow_html=True,
@@ -1706,12 +1779,18 @@ def main() -> None:
                 left: 0;
                 right: 0;
                 text-align: center;
-                background: #f8f9fb;
-                border-top: 1px solid #d9dbe0;
-                color: #2b2f36;
+                background: var(--footer-bg);
+                border-top: 1px solid var(--footer-border);
+                color: var(--footer-text);
                 padding: 8px 12px;
                 font-size: 12px;
                 z-index: 9999;
+            }}
+            html[data-theme="dark"] .app-footer,
+            body[data-theme="dark"] .app-footer {{
+                background: var(--footer-bg) !important;
+                border-top-color: var(--footer-border) !important;
+                color: var(--footer-text) !important;
             }}
         </style>
         <div class="app-footer">{L["footer"]}</div>
