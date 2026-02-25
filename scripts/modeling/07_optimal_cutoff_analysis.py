@@ -321,11 +321,18 @@ def run_cutoff_optimization_flow():
     for target in OUTCOMES:
         target_dir = get_model_dir(target)
         fig_save_dir = os.path.join(FIG_CUTOFF_DIR, target)
+        ci_stats = None
         
         if not os.path.exists(target_dir):
             _log(f"跳过 {target}: 路径缺失", "WARN"); continue
 
         _log(f"正在处理终点: [{target.upper()}]", "INFO")
+        ci_path = os.path.join(target_dir, "bootstrap_ci_stats.pkl")
+        if os.path.exists(ci_path):
+            try:
+                ci_stats = joblib.load(ci_path)
+            except Exception:
+                ci_stats = None
 
         try:
             # 1. 资产加载与特征对齐
@@ -379,11 +386,19 @@ def run_cutoff_optimization_flow():
 
             # --- 全人群效能审计 ---
             perf_main = calculate_detailed_metrics(y_test, y_prob, best_th)
+            auc_low_main, auc_high_main = np.nan, np.nan
+            if isinstance(ci_stats, dict) and name in ci_stats and "main" in ci_stats[name]:
+                try:
+                    auc_low_main, auc_high_main = ci_stats[name]["main"]
+                except Exception:
+                    pass
             perf_main.update({
                 'Algorithm': name, 
                 'Group': 'Full Population', 
                 'Outcome': target,
-                'AUC': round(auc_val, 4) # 【新增】加入 AUC
+                'AUC': round(auc_val, 4), # 【新增】加入 AUC
+                'AUC_Low': round(float(auc_low_main), 4) if not np.isnan(auc_low_main) else np.nan,
+                'AUC_High': round(float(auc_high_main), 4) if not np.isnan(auc_high_main) else np.nan,
             })
             target_perf_report.append(perf_main)
 
@@ -402,11 +417,20 @@ def run_cutoff_optimization_flow():
                     
                     # 使用主人群阈值评估当前性能
                     perf_sub = calculate_detailed_metrics(y_test_sub, y_prob_sub, best_th)
+                    auc_sub = roc_auc_score(y_test_sub, y_prob_sub)
+                    auc_low_sub, auc_high_sub = np.nan, np.nan
+                    if isinstance(ci_stats, dict) and name in ci_stats and "sub" in ci_stats[name]:
+                        try:
+                            auc_low_sub, auc_high_sub = ci_stats[name]["sub"]
+                        except Exception:
+                            pass
                     perf_sub.update({
                         'Algorithm': name, 
                         'Group': 'Subgroup (Non-Renal)', 
                         'Outcome': target,
-                        'AUC': round(roc_auc_score(y_test_sub, y_prob_sub), 4),
+                        'AUC': round(auc_sub, 4),
+                        'AUC_Low': round(float(auc_low_sub), 4) if not np.isnan(auc_low_sub) else np.nan,
+                        'AUC_High': round(float(auc_high_sub), 4) if not np.isnan(auc_high_sub) else np.nan,
                         'Subgroup_Specific_Th': round(best_th_sub, 4) # 存储独立的建议阈值
                     })
                     target_perf_report.append(perf_sub)

@@ -1,0 +1,14 @@
+﻿Model,Hyperparameter,Type,Search Space,Sampling Distribution,Optuna Trials (per endpoint)
+XGBoost,n_estimators,int,"[100, 500]",uniform integer,100
+XGBoost,max_depth,int,"[3, 7]",uniform integer,100
+XGBoost,learning_rate,float,"[0.01, 0.2]",log-uniform,100
+XGBoost,subsample,float,"[0.5, 1.0]",uniform,100
+Random Forest,n_estimators,int,"[100, 500]",uniform integer,100
+Random Forest,max_depth,int,"[5, 15]",uniform integer,100
+Random Forest,min_samples_split,int,"[2, 20]",uniform integer,100
+Random Forest,min_samples_leaf,int,"[1, 10]",uniform integer,100
+SVM,C,float,"[0.1, 10.0]",log-uniform,50
+SVM,gamma,categorical,"{scale, auto}",categorical,50
+SVM,kernel,fixed,rbf,fixed,50
+Decision Tree,max_depth,int,"[3, 15]",uniform integer,50
+Decision Tree,min_samples_leaf,int,"[1, 20]",uniform integer,50

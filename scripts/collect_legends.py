@@ -3,11 +3,11 @@
 from pathlib import Path
 from collections import OrderedDict
 
-docs = Path(__file__).resolve().parent.parent / "docs"
-tables_main = docs / "tables" / "main"
-tables_supp = docs / "tables" / "supplementary"
-figures_main = docs / "figures" / "main"
-figures_supp = docs / "figures" / "supplementary"
+results = Path(__file__).resolve().parent.parent / "results"
+tables_main = results / "main" / "tables"
+tables_supp = results / "supplementary" / "tables"
+figures_main = results / "main" / "figures"
+figures_supp = results / "supplementary" / "figures"
 
 def base_from_md(md_path: Path) -> str:
     """Extract base identifier: Table1_baseline, Fig2_ROC_external_pof, etc."""
@@ -23,7 +23,7 @@ def collect_legends(root: Path) -> OrderedDict:
         if md.parent == root or "SF" in str(md):
             base = base_from_md(md)
             if base not in seen:
-                seen[base] = (md.relative_to(docs), md.read_text(encoding="utf-8").strip())
+                seen[base] = (md.relative_to(results), md.read_text(encoding="utf-8").strip())
     return OrderedDict(sorted(seen.items(), key=lambda x: (str(x[1][0]), x[0])))
 
 out = []
@@ -110,6 +110,6 @@ for (folder, base), content in sorted(supp_fig.items(), key=lambda x: (x[0][0], 
     out.append("---")
     out.append("")
 
-output_path = docs / "FIGURES_TABLES_LEGENDS_SUMMARY.md"
+output_path = results / "FIGURES_TABLES_LEGENDS_SUMMARY.md"
 output_path.write_text("\n".join(out), encoding="utf-8")
 print(f"Written: {output_path}")

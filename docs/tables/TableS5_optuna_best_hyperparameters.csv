@@ -1,0 +1,13 @@
+﻿Endpoint,Model,Best Hyperparameter Combination
+Primary endpoint (POF),XGBoost,"{""n_estimators"": 203, ""max_depth"": 3, ""learning_rate"": 0.015356541710370732, ""subsample"": 0.7904316109837108}"
+Primary endpoint (POF),Random Forest,"{""n_estimators"": 429, ""max_depth"": 14, ""min_samples_split"": 19, ""min_samples_leaf"": 4}"
+Primary endpoint (POF),SVM,"{""C"": 0.22032188337418315, ""gamma"": ""scale"", ""kernel"": ""rbf""}"
+Primary endpoint (POF),Decision Tree,"{""max_depth"": 9, ""min_samples_leaf"": 18}"
+Secondary endpoint (28-day mortality),XGBoost,"{""n_estimators"": 211, ""max_depth"": 3, ""learning_rate"": 0.02602881259023273, ""subsample"": 0.5235190860568599}"
+Secondary endpoint (28-day mortality),Random Forest,"{""n_estimators"": 372, ""max_depth"": 15, ""min_samples_split"": 4, ""min_samples_leaf"": 4}"
+Secondary endpoint (28-day mortality),SVM,"{""C"": 0.10008101329804245, ""gamma"": ""auto"", ""kernel"": ""rbf""}"
+Secondary endpoint (28-day mortality),Decision Tree,"{""max_depth"": 6, ""min_samples_leaf"": 15}"
+Composite endpoint,XGBoost,"{""n_estimators"": 348, ""max_depth"": 3, ""learning_rate"": 0.012276155565382528, ""subsample"": 0.5021181667841529}"
+Composite endpoint,Random Forest,"{""n_estimators"": 421, ""max_depth"": 9, ""min_samples_split"": 2, ""min_samples_leaf"": 6}"
+Composite endpoint,SVM,"{""C"": 0.3339704119445903, ""gamma"": ""scale"", ""kernel"": ""rbf""}"
+Composite endpoint,Decision Tree,"{""max_depth"": 8, ""min_samples_leaf"": 19}"

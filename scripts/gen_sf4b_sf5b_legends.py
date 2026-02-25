@@ -30,7 +30,7 @@ OUTCOME_NAMES = {
     "composite": "混合终点（POF 或 28 天死亡）",
 }
 
-BASE = Path(__file__).resolve().parent.parent / "docs" / "figures" / "supplementary"
+BASE = Path(__file__).resolve().parent.parent / "results" / "supplementary" / "figures"
 
 
 def sf4b_content(feature: str, outcome: str) -> str:

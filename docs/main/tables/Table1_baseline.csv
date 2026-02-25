@@ -1,0 +1,31 @@
+Characteristic,"MIMIC-IV, n=1,095","eICU-CRD, n=1,112",p-value
+Demographics & Comorbidities,,,
+Age (years),"59.0 [46.0, 71.0]","54.0 [42.0, 66.0]",<0.001
+"Male, n (%)",627 (57.3%),679 (61.1%),0.076
+Weight (kg),"82.7 [70.2, 99.6]","82.2 [68.6, 98.5]",0.403
+"Congestive heart failure, n (%)",204 (18.6%),60 (5.4%),<0.001
+"Chronic kidney disease, n (%)",209 (19.1%),364 (32.7%),<0.001
+"Malignancy, n (%)",76 (6.9%),17 (1.5%),<0.001
+Laboratory Parameters (extreme values within first 24h),,,
+[Renal / Metabolic],,,
+"Creatinine (max, umol/L) *","106.1 [70.7, 203.3]","97.2 [65.4, 178.3]",0.01
+"Urea (max, mmol/L)","8.2 [4.6, 15.0]","7.1 [3.9, 12.9]",<0.001
+"Lactate (max, mmol/L)","2.1 [1.4, 3.9]","1.9 [1.1, 3.3]",<0.001
+[Respiratory / Acid-Base],,,
+"P/F ratio (min, mmHg) *","120.0 [75.0, 191.7]","366.7 [309.5, 466.7]",<0.001
+pH (min) *,"7.3 [7.2, 7.4]","7.3 [7.2, 7.4]",0.034
+"HCO3 (min, mmol/L)","20.0 [16.0, 23.0]","21.0 [16.1, 24.0]",<0.001
+[Hematology / Others],,,
+"WBC (max, 10^9/L)","14.5 [10.2, 20.3]","12.0 [8.2, 17.4]",<0.001
+"Hemoglobin (min, g/L)","101.0 [84.0, 119.0]","112.0 [94.0, 130.0]",<0.001
+"Platelet (min, 10^9/L)","164.0 [109.0, 235.0]","170.0 [114.0, 233.0]",0.415
+"Total bilirubin (max, umol/L)","20.5 [10.3, 58.2]","17.1 [10.3, 34.2]",<0.001
+"Sodium (max, mmol/L)","139.0 [136.0, 142.0]","139.0 [136.0, 142.0]",0.009
+Organ Support,,,
+"Mechanical ventilation, n (%)",381 (34.8%),1074 (96.6%),<0.001
+"Vasopressors, n (%)",311 (28.4%),133 (12.0%),<0.001
+Clinical Outcomes,,,
+"Persistent organ failure (POF), n (%)",443 (40.5%),463 (41.6%),0.603
+"28-day mortality, n (%)",169 (15.4%),93 (8.4%),<0.001
+Note: Laboratory variables are extreme values within first 24h (max/min as labeled).,,,
+"Note: * denotes prespecified key variables: Creatinine (max), P/F ratio (min), and pH (min).",,,

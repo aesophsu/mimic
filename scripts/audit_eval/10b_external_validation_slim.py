@@ -9,9 +9,11 @@ import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import (
+    accuracy_score,
     average_precision_score,
     brier_score_loss,
     confusion_matrix,
+    f1_score,
     roc_auc_score,
     roc_curve,
 )
@@ -153,22 +155,55 @@ def _get_xgb_params(bundle: dict[str, Any]) -> dict[str, Any]:
         return default
 
 
-def _auc_ci_bootstrap(y_true: np.ndarray, y_prob: np.ndarray, n_bootstraps: int = 1000, seed: int = 42) -> tuple[float, float]:
+def _point_metrics(y_true: np.ndarray, y_prob: np.ndarray, threshold: float) -> dict[str, float]:
+    y_pred = (y_prob >= threshold).astype(int)
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+    sens = float(tp / (tp + fn)) if (tp + fn) > 0 else 0.0
+    spec = float(tn / (tn + fp)) if (tn + fp) > 0 else 0.0
+    ppv = float(tp / (tp + fp)) if (tp + fp) > 0 else 0.0
+    npv = float(tn / (tn + fn)) if (tn + fn) > 0 else 0.0
+    return {
+        "AUC": float(roc_auc_score(y_true, y_prob)),
+        "AUPRC": float(average_precision_score(y_true, y_prob)),
+        "Accuracy": float(accuracy_score(y_true, y_pred)),
+        "F1": float(f1_score(y_true, y_pred, zero_division=0)),
+        "Sensitivity": sens,
+        "Specificity": spec,
+        "PPV": ppv,
+        "NPV": npv,
+        "Brier": float(brier_score_loss(y_true, y_prob)),
+    }
+
+
+def _metrics_ci_bootstrap(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    threshold: float,
+    n_bootstraps: int = 1000,
+    seed: int = 42,
+) -> tuple[dict[str, float], dict[str, tuple[float, float]]]:
+    point = _point_metrics(y_true, y_prob, threshold)
     rng = np.random.RandomState(seed)
-    aucs = []
+    names = ["AUC", "AUPRC", "Accuracy", "F1", "Sensitivity", "Specificity", "PPV", "NPV", "Brier"]
+    samples = {k: [] for k in names}
     n = len(y_true)
     for _ in range(n_bootstraps):
         idx = rng.randint(0, n, n)
         y_b = y_true[idx]
         if len(np.unique(y_b)) < 2:
             continue
-        aucs.append(roc_auc_score(y_b, y_prob[idx]))
-    if not aucs:
-        return np.nan, np.nan
-    aucs = np.sort(np.array(aucs))
-    lo = float(aucs[int(0.025 * len(aucs))])
-    hi = float(aucs[int(0.975 * len(aucs))])
-    return lo, hi
+        p_b = y_prob[idx]
+        m = _point_metrics(y_b, p_b, threshold)
+        for k in names:
+            samples[k].append(m[k])
+    cis: dict[str, tuple[float, float]] = {}
+    for k, vals in samples.items():
+        if not vals:
+            cis[k] = (np.nan, np.nan)
+            continue
+        arr = np.sort(np.array(vals))
+        cis[k] = (float(arr[int(0.025 * len(arr))]), float(arr[int(0.975 * len(arr))]))
+    return point, cis
 
 
 def _select_threshold_by_youden(y_true: np.ndarray, y_prob: np.ndarray) -> float:
@@ -226,14 +261,7 @@ def _run_one_target(
     threshold = _select_threshold_by_youden(y_test.values, p_test)
 
     p_eicu = clf.predict_proba(scaler.transform(x_eicu_raw))[:, 1]
-    y_pred_eicu = (p_eicu >= threshold).astype(int)
-    auc = float(roc_auc_score(y_eicu.values, p_eicu))
-    auc_lo, auc_hi = _auc_ci_bootstrap(y_eicu.values, p_eicu)
-    auprc = float(average_precision_score(y_eicu.values, p_eicu))
-    brier = float(brier_score_loss(y_eicu.values, p_eicu))
-    tn, fp, fn, tp = confusion_matrix(y_eicu.values, y_pred_eicu).ravel()
-    sens = float(tp / (tp + fn)) if (tp + fn) > 0 else 0.0
-    spec = float(tn / (tn + fp)) if (tn + fp) > 0 else 0.0
+    point, cis = _metrics_ci_bootstrap(y_eicu.values, p_eicu, threshold, n_bootstraps=1000, seed=42)
 
     row = {
         "Endpoint": OUTCOME_TYPE.get(target, target),
@@ -241,13 +269,15 @@ def _run_one_target(
         "Algorithm": f"XGBoost-Slim(k={k_use})",
         "K": int(k_use),
         "Features": ";".join(feats),
-        "AUC": auc,
-        "AUC_Low": auc_lo,
-        "AUC_High": auc_hi,
-        "AUPRC": auprc,
-        "Brier": brier,
-        "Sensitivity": sens,
-        "Specificity": spec,
+        "AUC": point["AUC"], "AUC_Low": cis["AUC"][0], "AUC_High": cis["AUC"][1],
+        "AUPRC": point["AUPRC"], "AUPRC_Low": cis["AUPRC"][0], "AUPRC_High": cis["AUPRC"][1],
+        "Accuracy": point["Accuracy"], "Accuracy_Low": cis["Accuracy"][0], "Accuracy_High": cis["Accuracy"][1],
+        "F1": point["F1"], "F1_Low": cis["F1"][0], "F1_High": cis["F1"][1],
+        "Sensitivity": point["Sensitivity"], "Sensitivity_Low": cis["Sensitivity"][0], "Sensitivity_High": cis["Sensitivity"][1],
+        "Specificity": point["Specificity"], "Specificity_Low": cis["Specificity"][0], "Specificity_High": cis["Specificity"][1],
+        "PPV": point["PPV"], "PPV_Low": cis["PPV"][0], "PPV_High": cis["PPV"][1],
+        "NPV": point["NPV"], "NPV_Low": cis["NPV"][0], "NPV_High": cis["NPV"][1],
+        "Brier": point["Brier"], "Brier_Low": cis["Brier"][0], "Brier_High": cis["Brier"][1],
         "Threshold": threshold,
         "N_External": int(len(y_eicu)),
         "Feature_Source": source_used,
@@ -265,7 +295,8 @@ def _run_one_target(
         )
 
     _log(
-        f"[{target}] k={k_use} | AUC={auc:.4f} ({auc_lo:.4f}-{auc_hi:.4f}) | Sens={sens:.4f} | Spec={spec:.4f}",
+        f"[{target}] k={k_use} | AUC={point['AUC']:.4f} ({cis['AUC'][0]:.4f}-{cis['AUC'][1]:.4f}) | "
+        f"Sens={point['Sensitivity']:.4f} | Spec={point['Specificity']:.4f}",
         "OK",
     )
     return row

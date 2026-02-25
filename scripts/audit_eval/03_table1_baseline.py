@@ -131,6 +131,7 @@ def build_mimic_table1(df_mimic):
         "Overall": str(n_total),
         "Non-POF": str(n0),
         "POF": str(n1),
+        "Missing (MIMIC)": "",
         "P-value": "",
         "SMD (POF vs Non-POF)": "",
     }]
@@ -140,6 +141,7 @@ def build_mimic_table1(df_mimic):
             "Overall": "",
             "Non-POF": "",
             "POF": "",
+            "Missing (MIMIC)": "",
             "P-value": "",
             "SMD (POF vs Non-POF)": "",
         })
@@ -155,6 +157,7 @@ def build_mimic_table1(df_mimic):
                 pof = _n_pct(n1, n1)  # 100%
                 pval = "—"
                 smd = np.nan
+                missing_mimic = "0.0%"
             elif col in BINARY_SHOW_POSITIVE_ONLY:
                 v0 = (g0[col] == 1).sum()
                 v1 = (g1[col] == 1).sum()
@@ -165,18 +168,21 @@ def build_mimic_table1(df_mimic):
                 tab = np.array([[n0 - v0, v0], [n1 - v1, v1]])
                 pval = _pvalue_categorical(tab)
                 smd = _smd_binary(v0 / n0, v1 / n1, n0, n1)
+                missing_mimic = f"{df_mimic[col].isna().mean() * 100:.1f}%"
             else:
                 overall = _median_iqr(df_mimic[col])
                 non_pof = _median_iqr(g0[col])
                 pof = _median_iqr(g1[col])
                 pval = _pvalue_continuous(g0[col], g1[col])
                 smd = _smd_continuous(g0[col], g1[col])
+                missing_mimic = f"{df_mimic[col].isna().mean() * 100:.1f}%"
             char_display = f"  {label}" if TABLE1_USE_INDENT else label
             rows.append({
                 "Characteristic": char_display,
                 "Overall": overall,
                 "Non-POF": non_pof,
                 "POF": pof,
+                "Missing (MIMIC)": missing_mimic,
                 "P-value": pval,
                 "SMD (POF vs Non-POF)": _format_smd(smd),
             })
@@ -268,6 +274,33 @@ def _build_smd_mimic_vs_eicu(df_table1, df_mimic, df_eicu):
     return smd_vals
 
 
+def _build_missing_eicu_column(df_table1, df_eicu):
+    """按 Table 1 行顺序构建 eICU 缺失率列；Organ Support 使用首日干预列"""
+    label_to_col = {}
+    for _, cols in TABLE1_GROUPS.items():
+        for col in cols:
+            label_to_col[_get_display_label(col)] = col
+
+    missing_vals = []
+    for _, row in df_table1.iterrows():
+        char = row["Characteristic"]
+        if char == "n" or char in TABLE1_GROUPS:
+            missing_vals.append("")
+            continue
+        col = _char_to_col(char, label_to_col)
+        if col is None:
+            missing_vals.append("—")
+            continue
+        eicu_col = EICU_DAY1_COL_MAP.get(col, col)
+        if eicu_col not in df_eicu.columns:
+            eicu_col = col
+        if eicu_col not in df_eicu.columns:
+            missing_vals.append("—")
+            continue
+        missing_vals.append(f"{df_eicu[eicu_col].isna().mean() * 100:.1f}%")
+    return missing_vals
+
+
 def _add_footnotes(df_table1):
     """在表格底部添加脚注行"""
     n_cols = len(df_table1.columns)
@@ -287,6 +320,8 @@ def build_table1_with_eicu(df_table1, df_mimic, df_eicu):
     df_table1 = df_table1.copy()
     eicu_vals = _build_eicu_column(df_table1, df_eicu)
     df_table1.insert(4, "eICU (External Validation)", eicu_vals)
+    eicu_missing = _build_missing_eicu_column(df_table1, df_eicu)
+    df_table1.insert(5, "Missing (eICU)", eicu_missing)
     smd_drift = _build_smd_mimic_vs_eicu(df_table1, df_mimic, df_eicu)
     df_table1["SMD (MIMIC vs eICU)"] = smd_drift
     return _add_footnotes(df_table1)

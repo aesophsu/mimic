@@ -22,6 +22,27 @@ TRAIN_PATH = get_cleaned_path("mimic_train_processed.csv")
 TEST_PATH = get_cleaned_path("mimic_test_processed.csv")
 
 
+def _auc_ci_bootstrap(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    n_bootstraps: int = 1000,
+    seed: int = 42,
+) -> tuple[float, float]:
+    rng = np.random.default_rng(seed)
+    n = len(y_true)
+    aucs = []
+    for _ in range(n_bootstraps):
+        idx = rng.integers(0, n, size=n)
+        y_b = y_true[idx]
+        if len(np.unique(y_b)) < 2:
+            continue
+        aucs.append(float(roc_auc_score(y_b, y_prob[idx])))
+    if not aucs:
+        return np.nan, np.nan
+    lo, hi = np.percentile(aucs, [2.5, 97.5])
+    return float(lo), float(hi)
+
+
 def _load_target_bundle(target: str) -> dict[str, Any]:
     bundle_path = os.path.join(get_model_dir(target), "deploy_bundle.pkl")
     if not os.path.exists(bundle_path):
@@ -77,6 +98,8 @@ def _fit_eval_topk(
     X_test_raw: pd.DataFrame,
     y_test: np.ndarray,
     xgb_params: dict[str, Any],
+    auc_ci_bootstraps: int = 1000,
+    auc_ci_seed: int = 42,
 ) -> dict[str, float]:
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train_raw)
@@ -87,9 +110,13 @@ def _fit_eval_topk(
     clf.fit(X_train, y_train)
     y_prob = clf.predict_proba(X_test)[:, 1]
     y_pred = (y_prob >= 0.5).astype(int)
+    auc = float(roc_auc_score(y_test, y_prob))
+    auc_lo, auc_hi = _auc_ci_bootstrap(y_test, y_prob, n_bootstraps=auc_ci_bootstraps, seed=auc_ci_seed)
 
     return {
-        "auc": float(roc_auc_score(y_test, y_prob)),
+        "auc": auc,
+        "auc_low": auc_lo,
+        "auc_high": auc_hi,
         "accuracy": float(accuracy_score(y_test, y_pred)),
         "brier": float(brier_score_loss(y_test, y_prob)),
     }
@@ -102,6 +129,7 @@ def _run_target(
     min_k: int,
     max_k: int | None,
     auc_tolerance: float,
+    auc_ci_bootstraps: int,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     bundle = _load_target_bundle(target)
     ranked_features = _get_ranked_features(bundle)
@@ -124,20 +152,31 @@ def _run_target(
     rows = []
     for k in range(k_min, k_max + 1):
         feats = usable[:k]
-        metrics = _fit_eval_topk(X_train_base[feats], y_train.values, X_test_base[feats], y_test.values, xgb_params)
+        metrics = _fit_eval_topk(
+            X_train_base[feats],
+            y_train.values,
+            X_test_base[feats],
+            y_test.values,
+            xgb_params,
+            auc_ci_bootstraps=auc_ci_bootstraps,
+            auc_ci_seed=42 + k,
+        )
         rows.append(
             {
                 "target": target,
                 "k": k,
                 "features": ";".join(feats),
                 "auc": metrics["auc"],
+                "auc_low": metrics["auc_low"],
+                "auc_high": metrics["auc_high"],
                 "accuracy": metrics["accuracy"],
                 "brier": metrics["brier"],
                 "n_test": int(len(y_test)),
             }
         )
         _log(
-            f"[{target}] k={k:>2d} | AUC={metrics['auc']:.4f} | ACC={metrics['accuracy']:.4f} | Brier={metrics['brier']:.4f}",
+            f"[{target}] k={k:>2d} | AUC={metrics['auc']:.4f} ({metrics['auc_low']:.4f}-{metrics['auc_high']:.4f}) | "
+            f"ACC={metrics['accuracy']:.4f} | Brier={metrics['brier']:.4f}",
             "INFO",
         )
 
@@ -152,10 +191,15 @@ def _run_target(
         "target": target,
         "k_recommended": int(picked["k"]),
         "auc_recommended": float(picked["auc"]),
+        "auc_recommended_low": float(picked["auc_low"]),
+        "auc_recommended_high": float(picked["auc_high"]),
         "accuracy_recommended": float(picked["accuracy"]),
         "k_best_auc": int(best_row["k"]),
         "auc_best": float(best_row["auc"]),
+        "auc_best_low": float(best_row["auc_low"]),
+        "auc_best_high": float(best_row["auc_high"]),
         "auc_tolerance": float(auc_tolerance),
+        "auc_ci_bootstraps": int(auc_ci_bootstraps),
         "selection_rule": "smallest_k_within_auc_tolerance_on_internal_test",
     }
     return curve, recommendation
@@ -167,6 +211,7 @@ def main() -> None:
     parser.add_argument("--min-k", type=int, default=3, help="最小特征数")
     parser.add_argument("--max-k", type=int, default=None, help="最大特征数（默认使用全部已选特征）")
     parser.add_argument("--auc-tolerance", type=float, default=0.01, help="AUC 容忍差值（推荐最小k阈值）")
+    parser.add_argument("--auc-ci-bootstraps", type=int, default=1000, help="AUC 95%CI bootstrap 次数")
     args = parser.parse_args()
 
     log_header("🧪 06b_xgb_internal_feature_pruning: 开发集内附加变量筛选")
@@ -190,7 +235,15 @@ def main() -> None:
 
         target_dir = get_model_dir(target)
         ensure_dirs(target_dir)
-        curve, rec = _run_target(target, df_train, df_test, args.min_k, args.max_k, args.auc_tolerance)
+        curve, rec = _run_target(
+            target,
+            df_train,
+            df_test,
+            args.min_k,
+            args.max_k,
+            args.auc_tolerance,
+            args.auc_ci_bootstraps,
+        )
 
         curve_path = os.path.join(target_dir, "xgb_internal_pruning_curve.csv")
         rec_path = os.path.join(target_dir, "xgb_internal_pruning_recommendation.json")

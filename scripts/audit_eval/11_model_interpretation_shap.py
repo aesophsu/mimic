@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import shap
 import warnings
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from utils.paths import get_model_dir, get_main_figure_dir, get_supplementary_figure_dir, get_project_root, ensure_dirs
+from utils.paths import get_model_dir, get_main_figure_dir, get_supplementary_figure_dir, ensure_dirs
 from utils.feature_formatter import FeatureFormatter
 from utils.study_config import OUTCOMES
 from utils.plot_config import apply_medical_style, SAVE_DPI, FIG_WIDTH_DOUBLE, PALETTE_MAIN, save_fig_medical
@@ -132,11 +132,8 @@ def plot_shap_importance_bar(shap_values, X, target, max_display=15):
     plt.tight_layout()
     base_n = os.path.join(FIGURE_DIR, f"Fig4_SHAP_importance_{target}")
     save_fig_medical(base_n)
-    docs_fig_main = os.path.join(get_project_root(), "docs", "figures", "main")
-    ensure_dirs(docs_fig_main)
-    save_fig_medical(os.path.join(docs_fig_main, f"Fig4_SHAP_importance_{target}"))
     plt.close()
-    _log(f"Global SHAP importance 已保存: {base_n}.png 及 docs/figures/main", "OK")
+    _log(f"Global SHAP importance 已保存: {base_n}.png", "OK")
 
 
 def plot_shap_force(shap_values, X, target):

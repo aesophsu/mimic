@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import log_loss
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from utils.feature_formatter import FeatureFormatter
@@ -114,6 +115,108 @@ def plot_feature_importance(features, weights, target):
     plt.savefig(f"{base}.png", dpi=SAVE_DPI, **save_kw)
     plt.close()
 
+
+def _compute_cv_deviance_curve(X, y, Cs, cv):
+    """Compute CV binomial deviance(log-loss) across C grid."""
+    fold_losses = []
+    for train_idx, val_idx in cv.split(X, y):
+        X_tr, X_va = X[train_idx], X[val_idx]
+        y_tr, y_va = y[train_idx], y[val_idx]
+        losses = []
+        for c in Cs:
+            clf = LogisticRegression(
+                C=c,
+                penalty='l1',
+                solver='liblinear',
+                random_state=42,
+                max_iter=1000
+            )
+            clf.fit(X_tr, y_tr)
+            prob = clf.predict_proba(X_va)[:, 1]
+            losses.append(log_loss(y_va, prob, labels=[0, 1]))
+        fold_losses.append(losses)
+    loss_arr = np.asarray(fold_losses)
+    loss_mean = loss_arr.mean(axis=0)
+    loss_se = loss_arr.std(axis=0, ddof=1) / np.sqrt(loss_arr.shape[0])
+    return loss_mean, loss_se
+
+
+def export_lasso_cv_curve(lasso_cv, X_train, y_train, selected_features, target, target_artifacts):
+    """Export tabular LASSO CV curve data for plotting and manuscript figures."""
+    Cs = lasso_cv.Cs_
+    lambdas = 1.0 / Cs
+    log10_C = np.log10(Cs)
+    log10_lambda = np.log10(lambdas)
+
+    pos_class = 1
+    auc_mean = lasso_cv.scores_[pos_class].mean(axis=0)
+    auc_se = lasso_cv.scores_[pos_class].std(axis=0, ddof=1) / np.sqrt(lasso_cv.scores_[pos_class].shape[0])
+    idx_auc_max = int(np.argmax(auc_mean))
+    auc_threshold = auc_mean[idx_auc_max] - auc_se[idx_auc_max]
+    auc_eligible = np.where(auc_mean >= auc_threshold)[0]
+    idx_auc_1se = int(auc_eligible[np.argmin(Cs[auc_eligible])])
+
+    dev_cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+    dev_mean, dev_se = _compute_cv_deviance_curve(X_train.values, y_train, Cs, dev_cv)
+    idx_dev_min = int(np.argmin(dev_mean))
+    dev_threshold = dev_mean[idx_dev_min] + dev_se[idx_dev_min]
+    dev_eligible = np.where(dev_mean <= dev_threshold)[0]
+    idx_dev_1se = int(dev_eligible[np.argmin(Cs[dev_eligible])])
+
+    n_nonzero = []
+    for c in Cs:
+        clf = LogisticRegression(
+            C=c,
+            penalty='l1',
+            solver='liblinear',
+            random_state=42,
+            max_iter=1000
+        )
+        clf.fit(X_train, y_train)
+        n_nonzero.append(int(np.count_nonzero(clf.coef_[0])))
+
+    out_df = pd.DataFrame({
+        "target": target,
+        "C": Cs,
+        "lambda": lambdas,
+        "log10_C": log10_C,
+        "log10_lambda": log10_lambda,
+        "mean_auc": auc_mean,
+        "se_auc": auc_se,
+        "mean_deviance": dev_mean,
+        "se_deviance": dev_se,
+        "n_nonzero_coef": n_nonzero
+    })
+    out_df["is_auc_lambda_min"] = False
+    out_df.loc[idx_auc_max, "is_auc_lambda_min"] = True
+    out_df["is_auc_lambda_1se"] = False
+    out_df.loc[idx_auc_1se, "is_auc_lambda_1se"] = True
+    out_df["is_dev_lambda_min"] = False
+    out_df.loc[idx_dev_min, "is_dev_lambda_min"] = True
+    out_df["is_dev_lambda_1se"] = False
+    out_df.loc[idx_dev_1se, "is_dev_lambda_1se"] = True
+    out_df["selected_n_features_final"] = int(len(selected_features))
+
+    out_path = os.path.join(target_artifacts, "lasso_cv_curve.csv")
+    out_df.to_csv(out_path, index=False)
+    print(f"💾 LASSO CV曲线已保存: {os.path.abspath(out_path)}")
+
+    summary = {
+        "target": target,
+        "n_candidate_features": int(X_train.shape[1]),
+        "selected_n_features_final": int(len(selected_features)),
+        "auc_lambda_min": float(lambdas[idx_auc_max]),
+        "auc_lambda_1se": float(lambdas[idx_auc_1se]),
+        "deviance_lambda_min": float(lambdas[idx_dev_min]),
+        "deviance_lambda_1se": float(lambdas[idx_dev_1se]),
+        "deviance_at_lambda_min": float(dev_mean[idx_dev_min]),
+        "deviance_at_lambda_1se": float(dev_mean[idx_dev_1se])
+    }
+    summary_path = os.path.join(target_artifacts, "lasso_cv_curve_summary.json")
+    with open(summary_path, "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+    print(f"💾 LASSO CV摘要已保存: {os.path.abspath(summary_path)}")
+
     
 def run_lasso_selection_flow():
     targets = OUTCOMES
@@ -215,6 +318,14 @@ def run_lasso_selection_flow():
         plot_academic_lasso(lasso_cv, X_train.columns, target)
         current_weights = [all_outcomes_features[target]["weights"][f] for f in selected_features]
         plot_feature_importance(selected_features, current_weights, target)
+        export_lasso_cv_curve(
+            lasso_cv=lasso_cv,
+            X_train=X_train,
+            y_train=y_train,
+            selected_features=selected_features,
+            target=target,
+            target_artifacts=TARGET_ARTIFACTS
+        )
         print(f"🎯 选定特征 ({len(selected_features)} 个): {', '.join(selected_features)}")
 
         with open(os.path.join(TARGET_ARTIFACTS, "selected_features.json"), "w", encoding='utf-8') as f:

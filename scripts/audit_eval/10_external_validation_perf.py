@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import subprocess
 import joblib
 import numpy as np
 import pandas as pd
@@ -9,13 +10,18 @@ import seaborn as sns
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from utils.plot_config import apply_medical_style, SAVE_DPI, PALETTE_MAIN, COLOR_REF_LINE, FIG_WIDTH_DOUBLE, save_fig_medical, LABEL_FONT, TITLE_FONT
 from utils.study_config import OUTCOMES, OUTCOME_TYPE
-from utils.paths import get_model_dir, get_external_dir, get_main_table_dir, get_main_figure_dir, get_supplementary_figure_dir, get_project_root, ensure_dirs
+from utils.paths import get_model_dir, get_external_dir, get_main_table_dir, get_main_figure_dir, get_supplementary_figure_dir, ensure_dirs
 from utils.logger import log as _log, log_header
 from utils.deploy_utils import load_deploy_bundle
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import (
-    confusion_matrix, f1_score, roc_auc_score,
-    average_precision_score, brier_score_loss, roc_curve
+    confusion_matrix,
+    f1_score,
+    roc_auc_score,
+    average_precision_score,
+    brier_score_loss,
+    roc_curve,
+    accuracy_score,
 )
 
 MODEL_ROOT = get_model_dir()
@@ -26,6 +32,30 @@ FIGURE_SUPP_DIR = get_supplementary_figure_dir("S4_comparison")  # Table4 viz, d
 ensure_dirs(TABLE_DIR, FIGURE_DIR, FIGURE_SUPP_DIR)
 
 TARGETS = OUTCOMES
+
+
+def trigger_fig3_plot_data_refresh():
+    """Auto-refresh upstream Fig3 plot data after external validation."""
+    script_path = os.path.join(os.path.dirname(__file__), "10c_prepare_fig3_plot_data.py")
+    if not os.path.exists(script_path):
+        _log(f"未找到 Fig3 数据刷新脚本，跳过: {script_path}", "WARN")
+        return
+    _log("触发 Fig3 上游数据刷新: 10c_prepare_fig3_plot_data.py", "INFO")
+    try:
+        result = subprocess.run(
+            [sys.executable, script_path],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            _log("Fig3 上游数据刷新完成。", "OK")
+        else:
+            _log(f"Fig3 上游数据刷新失败 (exit={result.returncode})", "WARN")
+            if result.stderr:
+                _log(result.stderr.strip()[:500], "WARN")
+    except Exception as e:
+        _log(f"触发 Fig3 上游数据刷新异常: {e}", "WARN")
 
 def load_external_validation_assets(target):
     """
@@ -94,23 +124,51 @@ def process_and_align_eicu(target, features):
     X_arr = np.array(X)
     return X_arr, y_true, renal_subgroup
 
-def compute_metrics_ci(y_true, y_prob, n_bootstraps=1000, seed=42):
-    """同步计算 AUC, AUPRC, Brier 的 95% CI"""
+def _point_metrics(y_true, y_prob, threshold):
+    y_pred = (y_prob >= threshold).astype(int)
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+    sens = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    spec = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+    ppv = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    npv = tn / (tn + fn) if (tn + fn) > 0 else 0.0
+    return {
+        "AUC": float(roc_auc_score(y_true, y_prob)),
+        "AUPRC": float(average_precision_score(y_true, y_prob)),
+        "Accuracy": float(accuracy_score(y_true, y_pred)),
+        "F1": float(f1_score(y_true, y_pred, zero_division=0)),
+        "Sensitivity": float(sens),
+        "Specificity": float(spec),
+        "PPV": float(ppv),
+        "NPV": float(npv),
+        "Brier": float(brier_score_loss(y_true, y_prob)),
+    }
+
+
+def compute_metrics_with_ci(y_true, y_prob, threshold, n_bootstraps=1000, seed=42):
+    """计算 9 项指标及其 95%CI（bootstrap）"""
+    point = _point_metrics(y_true, y_prob, threshold)
     rng = np.random.RandomState(seed)
-    scores = {'auc': [], 'auprc': [], 'brier': []}
-    
-    for i in range(n_bootstraps):
+    names = ["AUC", "AUPRC", "Accuracy", "F1", "Sensitivity", "Specificity", "PPV", "NPV", "Brier"]
+    samples = {k: [] for k in names}
+
+    for _ in range(n_bootstraps):
         idx = rng.randint(0, len(y_true), len(y_true))
-        if len(np.unique(y_true[idx])) < 2: continue
-        scores['auc'].append(roc_auc_score(y_true[idx], y_prob[idx]))
-        scores['auprc'].append(average_precision_score(y_true[idx], y_prob[idx]))
-        scores['brier'].append(brier_score_loss(y_true[idx], y_prob[idx]))
-    
-    results = {}
-    for k, v in scores.items():
-        sorted_v = np.sort(v)
-        results[k] = (sorted_v[int(0.025 * len(v))], sorted_v[int(0.975 * len(v))])
-    return results
+        y_b = y_true[idx]
+        if len(np.unique(y_b)) < 2:
+            continue
+        p_b = y_prob[idx]
+        m = _point_metrics(y_b, p_b, threshold)
+        for k in names:
+            samples[k].append(m[k])
+
+    ci = {}
+    for k, vals in samples.items():
+        if len(vals) == 0:
+            ci[k] = (np.nan, np.nan)
+            continue
+        arr = np.sort(np.array(vals))
+        ci[k] = (float(arr[int(0.025 * len(arr))]), float(arr[int(0.975 * len(arr))]))
+    return point, ci
 
 def plot_roc_all_models(target, eicu_curves, mimic_ref=None):
     """
@@ -157,7 +215,7 @@ def plot_roc_all_models(target, eicu_curves, mimic_ref=None):
 def plot_calibration_external(models, X_eicu, y_eicu, target, extra_save_dir=None):
     """
     外部验证（eICU）校准曲线：5 种模型在同一图上，风格与内部验证 06 一致。
-    保存到 results/main/figures/；若提供 extra_save_dir 则再保存到该目录（如 docs/figures/main）。
+    保存到 results/main/figures/；若提供 extra_save_dir 则再保存到该目录。
     """
     apply_medical_style()
     n_models = len(models)
@@ -284,48 +342,52 @@ def run_single_validation(target, mimic_auc_ref):
             y_prob = model.predict_proba(X_eicu)[:, 1]
             y_pred = (y_prob >= current_thresh).astype(int)
             
-            # 计算包含 95% CI 的多维指标
-            cis = compute_metrics_ci(y_eicu, y_prob) 
-            auc = roc_auc_score(y_eicu, y_prob)
-            brier = brier_score_loss(y_eicu, y_prob)
-            
-            # 计算敏感度与特异度
-            tn, fp, fn, tp = confusion_matrix(y_eicu, y_pred).ravel()
-            sens = tp / (tp + fn) if (tp + fn) > 0 else 0
-            spec = tn / (tn + fp) if (tn + fp) > 0 else 0
+            # 计算 9 项指标与 95% CI
+            point, cis = compute_metrics_with_ci(
+                y_eicu, y_prob, current_thresh, n_bootstraps=1000, seed=42
+            )
+            auc = point["AUC"]
+            brier = point["Brier"]
+            sens = point["Sensitivity"]
+            spec = point["Specificity"]
 
             # 4. 控制台实时输出结果
-            auc_display = f"{auc:.3f} ({cis['auc'][0]:.3f}-{cis['auc'][1]:.3f})"
+            auc_display = f"{auc:.3f} ({cis['AUC'][0]:.3f}-{cis['AUC'][1]:.3f})"
             _log(f"{name:<20} | {auc_display:<22} | {brier:.4f} | {sens:.4f}", "INFO")
 
             # 5. 结果收集
             results.append({
                 'Endpoint': OUTCOME_TYPE.get(target, target),
                 'Target': target, 'Algorithm': name, 
-                'AUC': auc, 'AUC_Low': cis['auc'][0], 'AUC_High': cis['auc'][1],
-                'Brier': brier, 'Sensitivity': sens, 'Specificity': spec,
-                'AUPRC': average_precision_score(y_eicu, y_prob),
+                'AUC': point['AUC'], 'AUC_Low': cis['AUC'][0], 'AUC_High': cis['AUC'][1],
+                'AUPRC': point['AUPRC'], 'AUPRC_Low': cis['AUPRC'][0], 'AUPRC_High': cis['AUPRC'][1],
+                'Accuracy': point['Accuracy'], 'Accuracy_Low': cis['Accuracy'][0], 'Accuracy_High': cis['Accuracy'][1],
+                'F1': point['F1'], 'F1_Low': cis['F1'][0], 'F1_High': cis['F1'][1],
+                'Sensitivity': point['Sensitivity'], 'Sensitivity_Low': cis['Sensitivity'][0], 'Sensitivity_High': cis['Sensitivity'][1],
+                'Specificity': point['Specificity'], 'Specificity_Low': cis['Specificity'][0], 'Specificity_High': cis['Specificity'][1],
+                'PPV': point['PPV'], 'PPV_Low': cis['PPV'][0], 'PPV_High': cis['PPV'][1],
+                'NPV': point['NPV'], 'NPV_Low': cis['NPV'][0], 'NPV_High': cis['NPV'][1],
+                'Brier': point['Brier'], 'Brier_Low': cis['Brier'][0], 'Brier_High': cis['Brier'][1],
                 'Threshold': current_thresh
             })
 
             # 6. 收集 eICU ROC 数据（供 5 模型对比图）
             fpr_e, tpr_e, _ = roc_curve(y_eicu, y_prob)
-            eicu_curves.append((name, auc, fpr_e, tpr_e, cis['auc']))
+            eicu_curves.append((name, auc, fpr_e, tpr_e, cis['AUC']))
 
             # 7. MIMIC 内部验证参考（取 XGBoost 作为基准）
             if name == "XGBoost":
                 y_prob_mimic = model.predict_proba(eval_data['X_test_pre'])[:, 1]
                 fpr_m, tpr_m, _ = roc_curve(eval_data['y_test'], y_prob_mimic)
                 auc_m = roc_auc_score(eval_data['y_test'], y_prob_mimic)
-                cis_m = compute_metrics_ci(eval_data['y_test'], y_prob_mimic)
-                mimic_ref = (name, auc_m, fpr_m, tpr_m, cis_m['auc'])
+                _, cis_m = compute_metrics_with_ci(eval_data['y_test'], y_prob_mimic, current_thresh, n_bootstraps=1000, seed=123)
+                mimic_ref = (name, auc_m, fpr_m, tpr_m, cis_m['AUC'])
 
         # 8. 绘制 5 种模型 eICU 外部验证 ROC 对比图
         plot_roc_all_models(target, eicu_curves, mimic_ref=mimic_ref)
-        # 9. 绘制外部验证校准曲线（整体 + 按肾功能亚组），并保存到 results/main/figures 与 docs/figures/main
-        docs_fig_main = os.path.join(get_project_root(), "docs", "figures", "main")
-        plot_calibration_external(models, X_eicu, y_eicu, target, extra_save_dir=docs_fig_main)
-        plot_calibration_external_by_renal(models, X_eicu, y_eicu, renal_sub, target, extra_save_dir=docs_fig_main)
+        # 9. 绘制外部验证校准曲线（整体 + 按肾功能亚组），仅保存到 results/main/figures
+        plot_calibration_external(models, X_eicu, y_eicu, target)
+        plot_calibration_external_by_renal(models, X_eicu, y_eicu, renal_sub, target)
         return results
 
     except Exception as e:
@@ -416,6 +478,9 @@ def main():
             plot_external_comparison_summary(csv_path)
         except Exception as e:
             _log(f"汇总图生成失败: {e}", "WARN")
+
+    # 自动刷新 Fig3 上游数据（供 docs 绘图脚本直接读取）
+    trigger_fig3_plot_data_refresh()
 
     _log("外部验证流已结束。下一步: 11_model_interpretation_shap.py", "OK")
 

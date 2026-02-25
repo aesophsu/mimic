@@ -1,0 +1,63 @@
+﻿Category,Variable Name,Unit,MIMIC-IV Missing (%),eICU-CRD Missing (%),MIMIC-IV Source (Table / Item),eICU-CRD Source (Table / Item),Definition / Processing
+Demographics & Comorbidities,Sex [gender],binary (0/1),0,0,mimiciv_hosp.patients / gender,eicu_derived.icustay_detail / gender,"Binary coding aligned across cohorts (Male=1, Female=0)."
+Demographics & Comorbidities,Age [admission_age],years,0,0,"mimiciv_hosp.patients / (anchor_age, anchor_year) -> derived at ICU intime",eicu_derived.icustay_detail / age,"In eICU, age '> 89' was recoded to 90 before alignment."
+Demographics & Comorbidities,Weight [weight_admit],kg,0,3,mimiciv_derived.first_day_weight / weight,eicu_derived.icustay_detail / admissionweight,
+Demographics & Comorbidities,CHF [heart_failure],binary (0/1),0,0,mimiciv_hosp.diagnoses_icd / ICD-9 428* or ICD-10 I50*,eicu_crd.diagnosis / diagnosisstring pattern (CHF/heart failure),Binary indicator from diagnosis-pattern mapping; harmonized to 0/1.
+Demographics & Comorbidities,CKD [chronic_kidney_disease],binary (0/1),0,0,mimiciv_hosp.diagnoses_icd / ICD-9 585* or ICD-10 N18*,eicu_crd.diagnosis / diagnosisstring pattern (CKD/ESRD),Binary indicator from diagnosis-pattern mapping; harmonized to 0/1.
+Demographics & Comorbidities,Malignancy [malignant_tumor],binary (0/1),0,0,mimiciv_hosp.diagnoses_icd / ICD-9 14*/15* or ICD-10 C*,eicu_crd.diagnosis / diagnosisstring pattern (malignant/cancer),Binary indicator from diagnosis-pattern mapping; harmonized to 0/1.
+Vital Signs,SpO2 (min) [spo2_min],%,0,20.4,mimiciv_icu.chartevents / itemid 220277 (SpO2),eicu_derived.pivoted_vital / spo2,
+Vital Signs,SpO2 (max) [spo2_max],%,0,20,mimiciv_icu.chartevents / itemid 220277 (SpO2),eicu_derived.pivoted_vital / spo2,
+Vital Signs,SpO2 slope [spo2_slope],% per hour,0,20,mimiciv_icu.chartevents / itemid 220277 (SpO2 trend 0-24h),eicu_derived.pivoted_vital / spo2 trend (0-24h),
+Laboratory Measurements,WBC (min) [wbc_min],×10⁹/L,0,5.8,mimiciv_derived.first_day_lab / wbc_min,eicu_crd.lab / WBC,
+Laboratory Measurements,WBC (max) [wbc_max],×10⁹/L,0,6.1,mimiciv_derived.first_day_lab / wbc_max,eicu_crd.lab / WBC,
+Laboratory Measurements,Hct (min) [hematocrit_min],%,0,100,mimiciv_derived.first_day_lab / hematocrit_min,eicu_crd.lab / Hct,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,Hct (max) [hematocrit_max],%,0,100,mimiciv_derived.first_day_lab / hematocrit_max,eicu_crd.lab / Hct,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,Hgb (min) [hemoglobin_min],g/dL,0,6.5,mimiciv_derived.first_day_lab / hemoglobin_min,eicu_crd.lab / Hgb,
+Laboratory Measurements,Hgb (max) [hemoglobin_max],g/dL,0,100,mimiciv_derived.first_day_lab / hemoglobin_max,eicu_crd.lab / Hgb,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,Plt (min) [platelets_min],×10⁹/L,0,7.3,mimiciv_derived.first_day_lab / platelets_min,eicu_crd.lab / platelets x 1000,
+Laboratory Measurements,Plt (max) [platelets_max],×10⁹/L,0,100,mimiciv_derived.first_day_lab / platelets_max,eicu_crd.lab / platelets x 1000,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,Alb (min) [albumin_min],g/dL,0,20.5,mimiciv_derived.first_day_lab / albumin_min,eicu_crd.lab / albumin,eICU albumin values in g/L were converted to g/dL when needed.
+Laboratory Measurements,Alb (max) [albumin_max],g/dL,0,20.5,mimiciv_derived.first_day_lab / albumin_max,eicu_crd.lab / albumin,eICU albumin values in g/L were converted to g/dL when needed.
+Laboratory Measurements,AG (min) [aniongap_min],mmol/L,0,18.6,mimiciv_derived.first_day_lab / aniongap_min,eicu_crd.lab / anion gap,
+Laboratory Measurements,AG (max) [aniongap_max],mmol/L,0,100,mimiciv_derived.first_day_lab / aniongap_max,eicu_crd.lab / anion gap,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,HCO3 (min) [bicarbonate_min],mmol/L,0,3.6,mimiciv_derived.first_day_lab / bicarbonate_min,eicu_crd.lab / bicarbonate,
+Laboratory Measurements,HCO3 (max) [bicarbonate_max],mmol/L,0,100,mimiciv_derived.first_day_lab / bicarbonate_max,eicu_crd.lab / bicarbonate,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,BUN (min) [bun_min],mg/dL,0,1.1,mimiciv_derived.first_day_lab / bun_min,eicu_crd.lab / BUN,
+Laboratory Measurements,BUN (max) [bun_max],mg/dL,0,1.1,mimiciv_derived.first_day_lab / bun_max,eicu_crd.lab / BUN,
+Laboratory Measurements,Ca (min) [lab_calcium_min],mg/dL,0,3.1,mimiciv_derived.first_day_lab / lab_calcium_min,eicu_crd.lab / calcium,
+Laboratory Measurements,Ca (max) [calcium_max],mg/dL,0,3.1,mimiciv_derived.first_day_lab / calcium_max,eicu_crd.lab / calcium,
+Laboratory Measurements,Cl (min) [chloride_min],mmol/L,0,2.2,mimiciv_derived.first_day_lab / chloride_min,eicu_crd.lab / chloride,
+Laboratory Measurements,Cl (max) [chloride_max],mmol/L,0,2.2,mimiciv_derived.first_day_lab / chloride_max,eicu_crd.lab / chloride,
+Laboratory Measurements,Creat (min) [creatinine_min],mg/dL,0,100,mimiciv_derived.first_day_lab / creatinine_min,eicu_crd.lab / creatinine,eICU creatinine values in umol/L were converted to mg/dL when needed. Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,Creat (max) [creatinine_max],mg/dL,0,0.5,mimiciv_derived.first_day_lab / creatinine_max,eicu_crd.lab / creatinine,eICU creatinine values in umol/L were converted to mg/dL when needed.
+Laboratory Measurements,Glu (min) [glucose_min],mg/dL,0,0.6,mimiciv_derived.first_day_lab / glucose_min,eicu_crd.lab / glucose,
+Laboratory Measurements,Glu (max) [glucose_max],mg/dL,0,100,mimiciv_derived.first_day_lab / glucose_max,eicu_crd.lab / glucose,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,Na (min) [sodium_min],mmol/L,0,0.7,mimiciv_derived.first_day_lab / sodium_min,eicu_crd.lab / sodium,
+Laboratory Measurements,Na (max) [sodium_max],mmol/L,0,0.7,mimiciv_derived.first_day_lab / sodium_max,eicu_crd.lab / sodium,
+Laboratory Measurements,K (min) [potassium_min],mmol/L,0,1,mimiciv_derived.first_day_lab / potassium_min,eicu_crd.lab / potassium,
+Laboratory Measurements,K (max) [potassium_max],mmol/L,0,1,mimiciv_derived.first_day_lab / potassium_max,eicu_crd.lab / potassium,
+Laboratory Measurements,Bili (min) [bilirubin_total_min],mg/dL,0,100,mimiciv_derived.first_day_lab / bilirubin_total_min,eicu_crd.lab / total bilirubin,eICU bilirubin values in umol/L were converted to mg/dL when needed. Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,Bili (max) [bilirubin_total_max],mg/dL,0,23.5,mimiciv_derived.first_day_lab / bilirubin_total_max,eicu_crd.lab / total bilirubin,eICU bilirubin values in umol/L were converted to mg/dL when needed.
+Laboratory Measurements,INR (min) [inr_min],-,0,100,mimiciv_derived.first_day_lab / inr_min,eicu_crd.lab / INR,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,INR (max) [inr_max],-,0,100,mimiciv_derived.first_day_lab / inr_max,eicu_crd.lab / INR,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,PT (min) [pt_min],s,0,100,mimiciv_derived.first_day_lab / pt_min,eicu_crd.lab / PT,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,PT (max) [pt_max],s,0,100,mimiciv_derived.first_day_lab / pt_max,eicu_crd.lab / PT,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,PTT (min) [ptt_min],s,0,74,mimiciv_derived.first_day_lab / ptt_min,eicu_crd.lab / PTT,
+Laboratory Measurements,PTT (max) [ptt_max],s,0,100,mimiciv_derived.first_day_lab / ptt_max,eicu_crd.lab / PTT,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,ALT (min) [alt_min],U/L,0,100,mimiciv_derived.first_day_lab / alt_min,eicu_crd.lab / ALT (SGPT),Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,ALT (max) [alt_max],U/L,0,23.6,mimiciv_derived.first_day_lab / alt_max,eicu_crd.lab / ALT (SGPT),
+Laboratory Measurements,AST (min) [ast_min],U/L,0,100,mimiciv_derived.first_day_lab / ast_min,eicu_crd.lab / AST (SGOT),Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,AST (max) [ast_max],U/L,0,23.7,mimiciv_derived.first_day_lab / ast_max,eicu_crd.lab / AST (SGOT),
+Laboratory Measurements,ALP (min) [alp_min],U/L,0,23.7,mimiciv_derived.first_day_lab / alp_min,eicu_crd.lab / alkaline phosphatase,
+Laboratory Measurements,ALP (max) [alp_max],U/L,0,100,mimiciv_derived.first_day_lab / alp_max,eicu_crd.lab / alkaline phosphatase,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,Phos (min) [phosphate_min],mg/dL,0,44.1,mimiciv_hosp.labevents / itemid 50970,eicu_crd.lab / phosphate,
+Laboratory Measurements,Lipase (max) [lipase_max],U/L,0,44.1,mimiciv_hosp.labevents / itemid 50956,eicu_crd.lab / lipase,
+Laboratory Measurements,Glu lab (min) [glucose_lab_min],mg/dL,0,0.6,"mimiciv_hosp.labevents / itemid 50931, 50809, 52569",eicu_crd.lab / glucose,
+Laboratory Measurements,Glu lab (max) [glucose_lab_max],mg/dL,0,0.6,"mimiciv_hosp.labevents / itemid 50931, 50809, 52569",eicu_crd.lab / glucose,
+Laboratory Measurements,Glu slope [glucose_slope],mg/dL per hour,0,27.8,"mimiciv_hosp.labevents / itemid 50931, 50809, 52569 (trend 0-24h)",eicu_crd.lab / labname~glucose (offset 0-1440),
+Laboratory Measurements,RDW (max) [rdw_max],%,0,100,"mimiciv_hosp.labevents / itemid 51277, 52172",eicu_crd.lab / RDW,Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%.
+Laboratory Measurements,Lac (max) [lactate_max],mmol/L,0,54.4,mimiciv_derived.first_day_lab / lactate_max,eicu_crd.lab / lactate,
+Laboratory Measurements,pH (min) [ph_min],-,0,62.4,mimiciv_derived.first_day_bg / ph_min,Derived chain / pivoted_bg.ph + lab(pH) + apacheapsvar.ph,"Multi-source rescue in eICU (blood gas, lab, then APACHE)."
+Laboratory Measurements,pH (max) [ph_max],-,0,100,mimiciv_derived.first_day_bg / ph_max,Derived chain / pivoted_bg.ph + lab(pH) + apacheapsvar.ph,"Multi-source rescue in eICU (blood gas, lab, then APACHE). Variable not explicitly retained in eICU raw-scale export; missingness shown as 100%."
+Laboratory Measurements,P/F (min) [pao2fio2ratio_min],mmHg,0,64.7,mimiciv_derived.first_day_bg / pao2fio2ratio_min,"eicu_derived.pivoted_bg / pao2, fio2 -> P/F ratio",P/F ratio derived from PaO2 and FiO2; no SpO2 fallback in eICU extraction.
+Laboratory Measurements,TBAR [tbar],ratio,0,23.5,Derived / bilirubin_total_max / albumin_min,Derived / bilirubin_total_max / albumin_min,

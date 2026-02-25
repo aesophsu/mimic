@@ -5,9 +5,10 @@ from docx.shared import Inches
 
 
 PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DOCS_DIR = os.path.join(PROJECT_ROOT, "docs")
-SUPP_DOCS_DIR = os.path.join(DOCS_DIR, "supplementary")
-SUPP_FIG_DIR = os.path.join(DOCS_DIR, "figures", "supplementary")
+# 仅在 results 下输出，避免向 docs/ 写入
+RESULTS_DIR = os.path.join(PROJECT_ROOT, "results")
+SUPP_DOCS_DIR = os.path.join(RESULTS_DIR, "supplementary", "docs")
+SUPP_FIG_DIR = os.path.join(RESULTS_DIR, "supplementary", "figures")
 
 
 def _ensure_dir(path: str) -> None:
@@ -259,4 +260,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

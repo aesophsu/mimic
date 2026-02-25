@@ -2,7 +2,7 @@
 04b: Figure 1 Study Overview — Panel A (CONSORT flowchart) + Panel B (missingness heatmap).
 Panel B uses all model-selected features from selected_features.json (22 unique), sorted by missing rate.
 横版：Fig1_study_overview.pdf, .png；竖版：Fig1_study_overview_portrait.pdf, .png。
-两者均保存到 results/main/figures/ 与 docs/figures/main/。
+两者仅保存到 results/main/figures/。
 """
 import json
 import os
@@ -17,7 +17,7 @@ from matplotlib.gridspec import GridSpec
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from utils.plot_config import apply_medical_style, SAVE_DPI, FIG_WIDTH_DOUBLE, FIG_HEIGHT_MAX, save_fig_medical
 from utils.feature_formatter import FeatureFormatter
-from utils.paths import get_cleaned_path, get_main_figure_dir, get_artifact_path, get_project_root, ensure_dirs
+from utils.paths import get_cleaned_path, get_main_figure_dir, get_artifact_path, ensure_dirs
 from utils.logger import log as _log, log_header
 
 # Flowchart counts (from MANUSCRIPT_METHODS / SQL flowchart)
@@ -82,7 +82,7 @@ def draw_flowchart_panel(ax, box_w=4.4, title_fontsize=6.5, box_fontsize=5.5):
     # Left: MIMIC-IV — 精简版排除条件与人数（Remaining 放在文本框最后一行）
     MIMIC_BOXES = [
         (f"AP admissions\n(ICD-9: 577.0; ICD-10: K85.x)\nn = {MIMIC_COUNTS[0]:,}", 7.4, False),
-        (f"ICU LOS < 24 h\nn = {mimic_excluded[0]:,}\nRemaining: {mimic_remaining[0]:,}", 7.4, False),
+        (f"ICU length of stay < 24 h\nn = {mimic_excluded[0]:,}\nRemaining: {mimic_remaining[0]:,}", 7.4, False),
         (f"Non-index admission\nn = {mimic_excluded[1]:,}\nRemaining: {mimic_remaining[1]:,}", 7.4, False),
         (f"Age < 18\nn = {mimic_excluded[2]:,}\nRemaining: {mimic_remaining[2]:,}", 7.4, False),
         (f"Missing predictors > 80%\nn = {mimic_excluded[3]:,}\nRemaining: {mimic_remaining[3]:,}", 7.4, False),
@@ -91,7 +91,7 @@ def draw_flowchart_panel(ax, box_w=4.4, title_fontsize=6.5, box_fontsize=5.5):
     # Right: eICU — 精简版排除条件与人数（Remaining 放在文本框最后一行）
     EICU_BOXES = [
         (f"AP admissions\n(Keyword: pancreatit; excl. chronic)\nn = {EICU_COUNTS[0]:,}", 7.4, False),
-        (f"ICU LOS < 24 h\nn = {eicu_excluded[0]:,}\nRemaining: {eicu_remaining[0]:,}", 7.4, False),
+        (f"ICU length of stay < 24 h\nn = {eicu_excluded[0]:,}\nRemaining: {eicu_remaining[0]:,}", 7.4, False),
         (f"Non-index admission\nn = {eicu_excluded[1]:,}\nRemaining: {eicu_remaining[1]:,}", 7.4, False),
         (f"Age < 18\nn = {eicu_excluded[2]:,}\nRemaining: {eicu_remaining[2]:,}", 7.4, False),
         (f"Missing predictors > 80%\nn = {eicu_excluded[3]:,}\nRemaining: {eicu_remaining[3]:,}", 7.4, False),
@@ -227,12 +227,8 @@ def main():
     # 在画布顶部画一不可见占位，使 bbox_inches='tight' 保留 A 标题上方留白（否则会被裁掉）
     fig.text(0.5, 0.992, " ", fontsize=7, alpha=0, transform=fig.transFigure)
     save_fig_medical(save_base)
-    # 横版图同时保存到 docs/figures/main
-    docs_fig_main = os.path.join(get_project_root(), "docs", "figures", "main")
-    ensure_dirs(docs_fig_main)
-    save_fig_medical(os.path.join(docs_fig_main, "Fig1_study_overview"))
     plt.close()
-    _log(f"Saved: {save_base}.pdf, .png + docs/figures/main/Fig1_study_overview.pdf, .png (横版)", "OK")
+    _log(f"Saved: {save_base}.pdf, .png (横版)", "OK")
 
     # 竖版：A 上 B 下，画布宽 170mm
     fig_w_single = 170 / 25.4   # 170 mm → in
@@ -276,9 +272,8 @@ def main():
     fig2.text(0.5, 0.992, " ", fontsize=7, alpha=0, transform=fig2.transFigure)
     save_base_portrait = os.path.join(FIGURE_DIR, "Fig1_study_overview_portrait")
     save_fig_medical(save_base_portrait)
-    save_fig_medical(os.path.join(docs_fig_main, "Fig1_study_overview_portrait"))
     plt.close(fig2)
-    _log(f"Saved: {save_base_portrait}.pdf, .png + docs/figures/main/Fig1_study_overview_portrait.pdf, .png (竖版)", "OK")
+    _log(f"Saved: {save_base_portrait}.pdf, .png (竖版)", "OK")
 
 
 if __name__ == "__main__":

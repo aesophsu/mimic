@@ -23,6 +23,27 @@ TRAIN_PATH = get_cleaned_path("mimic_train_processed.csv")
 TEST_PATH = get_cleaned_path("mimic_test_processed.csv")
 
 
+def _auc_ci_bootstrap(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    n_bootstraps: int = 1000,
+    seed: int = 42,
+) -> tuple[float, float]:
+    rng = np.random.default_rng(seed)
+    n = len(y_true)
+    aucs = []
+    for _ in range(n_bootstraps):
+        idx = rng.integers(0, n, size=n)
+        y_b = y_true[idx]
+        if len(np.unique(y_b)) < 2:
+            continue
+        aucs.append(float(roc_auc_score(y_b, y_prob[idx])))
+    if not aucs:
+        return np.nan, np.nan
+    lo, hi = np.percentile(aucs, [2.5, 97.5])
+    return float(lo), float(hi)
+
+
 def _patch_shap_for_xgboost31() -> None:
     import shap.explainers._tree as _tree_mod
 
@@ -102,6 +123,8 @@ def _fit_eval_topk(
     x_test_raw: pd.DataFrame,
     y_test: np.ndarray,
     xgb_params: dict[str, Any],
+    auc_ci_bootstraps: int = 1000,
+    auc_ci_seed: int = 42,
 ) -> dict[str, float]:
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train_raw)
@@ -112,8 +135,12 @@ def _fit_eval_topk(
     clf.fit(x_train, y_train)
     y_prob = clf.predict_proba(x_test)[:, 1]
     y_pred = (y_prob >= 0.5).astype(int)
+    auc = float(roc_auc_score(y_test, y_prob))
+    auc_lo, auc_hi = _auc_ci_bootstrap(y_test, y_prob, n_bootstraps=auc_ci_bootstraps, seed=auc_ci_seed)
     return {
-        "auc": float(roc_auc_score(y_test, y_prob)),
+        "auc": auc,
+        "auc_low": auc_lo,
+        "auc_high": auc_hi,
         "accuracy": float(accuracy_score(y_test, y_pred)),
         "brier": float(brier_score_loss(y_test, y_prob)),
     }
@@ -129,6 +156,7 @@ def _run_target(
     n_bootstrap: int,
     stability_threshold: float,
     shap_ref_size: int,
+    auc_ci_bootstraps: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any]]:
     bundle = _load_target_bundle(target)
     features = list(bundle.get("features") or bundle.get("feature_names") or [])
@@ -207,6 +235,8 @@ def _run_target(
             x_test_all[feats_k],
             y_test.values,
             xgb_params,
+            auc_ci_bootstraps=auc_ci_bootstraps,
+            auc_ci_seed=42 + k,
         )
         stable_freq = float(np.mean([topk_counts[k][f] / n_bootstrap for f in feats_k]))
         curve_rows.append(
@@ -215,13 +245,15 @@ def _run_target(
                 "k": k,
                 "features": ";".join(feats_k),
                 "auc": metrics["auc"],
+                "auc_low": metrics["auc_low"],
+                "auc_high": metrics["auc_high"],
                 "accuracy": metrics["accuracy"],
                 "brier": metrics["brier"],
                 "mean_selection_freq": stable_freq,
             }
         )
         _log(
-            f"[{target}] k={k:>2d} | AUC={metrics['auc']:.4f} | ACC={metrics['accuracy']:.4f} | "
+            f"[{target}] k={k:>2d} | AUC={metrics['auc']:.4f} ({metrics['auc_low']:.4f}-{metrics['auc_high']:.4f}) | ACC={metrics['accuracy']:.4f} | "
             f"Brier={metrics['brier']:.4f} | Stability={stable_freq:.3f}",
             "INFO",
         )
@@ -243,13 +275,18 @@ def _run_target(
         "target": target,
         "k_recommended": int(picked["k"]),
         "auc_recommended": float(picked["auc"]),
+        "auc_recommended_low": float(picked["auc_low"]),
+        "auc_recommended_high": float(picked["auc_high"]),
         "accuracy_recommended": float(picked["accuracy"]),
         "mean_selection_freq_recommended": float(picked["mean_selection_freq"]),
         "k_best_auc": int(best_row["k"]),
         "auc_best": float(best_row["auc"]),
+        "auc_best_low": float(best_row["auc_low"]),
+        "auc_best_high": float(best_row["auc_high"]),
         "auc_tolerance": float(auc_tolerance),
         "stability_threshold": float(stability_threshold),
         "bootstrap_n": int(n_bootstrap),
+        "auc_ci_bootstraps": int(auc_ci_bootstraps),
         "selection_rule": selection_rule,
     }
     return stability_df, curve_df, rec
@@ -264,6 +301,7 @@ def main() -> None:
     parser.add_argument("--bootstrap-n", type=int, default=200, help="Bootstrap 次数")
     parser.add_argument("--stability-threshold", type=float, default=0.70, help="Top-k 平均入选频率阈值")
     parser.add_argument("--shap-ref-size", type=int, default=300, help="SHAP 参考样本数量（训练集内）")
+    parser.add_argument("--auc-ci-bootstraps", type=int, default=1000, help="AUC 95%CI bootstrap 次数")
     args = parser.parse_args()
 
     log_header("🧪 06c_shap_bootstrap_feature_pruning: 开发集内 SHAP 稳定性筛选")
@@ -296,6 +334,7 @@ def main() -> None:
                 n_bootstrap=args.bootstrap_n,
                 stability_threshold=args.stability_threshold,
                 shap_ref_size=args.shap_ref_size,
+                auc_ci_bootstraps=args.auc_ci_bootstraps,
             )
         except Exception as e:
             _log(f"[{target}] 失败: {e}", "ERR")
