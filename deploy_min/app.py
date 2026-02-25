@@ -22,6 +22,7 @@ MODELS_DIR = os.path.join(ARTIFACTS_DIR, "models")
 SCALERS_DIR = os.path.join(ARTIFACTS_DIR, "scalers")
 FEATURE_DICT_PATH = os.path.join(ARTIFACTS_DIR, "features", "feature_dictionary.json")
 TABLE4_PATH = os.path.join(PROJECT_ROOT, "results", "main", "tables", "Table4_external_validation.csv")
+TABLE3_PATH = os.path.join(PROJECT_ROOT, "..", "results", "main", "tables", "Table3_performance.csv")
 TRAIN_PATH = os.path.join(PROJECT_ROOT, "data", "cleaned", "mimic_train_processed.csv")
 TEST_PATH = os.path.join(PROJECT_ROOT, "data", "cleaned", "mimic_test_processed.csv")
 DYNAMIC_DATA_AVAILABLE = os.path.exists(TRAIN_PATH) and os.path.exists(TEST_PATH)
@@ -1123,6 +1124,29 @@ def load_benchmark_metrics(target: str) -> dict[str, dict[str, float]]:
         except Exception:
             pass
 
+    # Fallback internal benchmark from repo-level results/main/tables/Table3_performance.csv
+    # (minimal deploy package may omit per-target internal_diagnostic_perf.csv files)
+    if not metrics["internal"] and Path(TABLE3_PATH).exists():
+        try:
+            df_t3 = pd.read_csv(TABLE3_PATH)
+            outcome_map = {"pof": "POF", "mortality": "MORTALITY", "composite": "COMPOSITE"}
+            sub = df_t3[
+                (df_t3["Outcome"].astype(str).str.upper() == outcome_map.get(target, target).upper())
+                & (df_t3["Model"].astype(str).str.lower() == "xgboost")
+                & (df_t3["Group"].astype(str).str.contains("Full", case=False, na=False))
+            ]
+            if not sub.empty:
+                row = sub.iloc[0]
+                auc_cell = str(row.get("AUC (95% CI)", ""))
+                auc_str = auc_cell.split("(", 1)[0].strip()
+                metrics["internal"] = {
+                    "auc": float(auc_str) if auc_str else np.nan,
+                    "sensitivity": float(row.get("Sens.", np.nan)),
+                    "specificity": float(row.get("Spec.", np.nan)),
+                }
+        except Exception:
+            pass
+
     # External benchmark from results/main/tables/Table4_external_validation.csv
     if Path(TABLE4_PATH).exists():
         try:
@@ -1656,7 +1680,7 @@ def main() -> None:
                         for k, v in user_values.items()
                     ]
                 )
-                st.dataframe(display_df, use_container_width=True, hide_index=True)
+                st.dataframe(display_df, use_container_width=True)
 
     st.markdown(
         f"""
