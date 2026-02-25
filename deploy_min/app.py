@@ -27,6 +27,14 @@ TRAIN_PATH = os.path.join(PROJECT_ROOT, "data", "cleaned", "mimic_train_processe
 TEST_PATH = os.path.join(PROJECT_ROOT, "data", "cleaned", "mimic_test_processed.csv")
 DYNAMIC_DATA_AVAILABLE = os.path.exists(TRAIN_PATH) and os.path.exists(TEST_PATH)
 
+# Fallback internal XGBoost benchmark from manuscript Table 3 (full population).
+# Used in minimal cloud deploys where internal_diagnostic_perf.csv / Table3 CSV may be omitted.
+INTERNAL_BENCHMARK_FALLBACK = {
+    "pof": {"auc": 0.845, "sensitivity": 0.897, "specificity": 0.674},
+    "mortality": {"auc": 0.857, "sensitivity": 0.868, "specificity": 0.707},
+    "composite": {"auc": 0.866, "sensitivity": 0.786, "specificity": 0.818},
+}
+
 TARGETS = {
     "POF（主要终点）": "pof",
     "28天死亡（次要终点）": "mortality",
@@ -1147,6 +1155,10 @@ def load_benchmark_metrics(target: str) -> dict[str, dict[str, float]]:
         except Exception:
             pass
 
+    # Last-resort fallback for minimal deploy branch (when internal benchmark files are excluded)
+    if not metrics["internal"]:
+        metrics["internal"] = INTERNAL_BENCHMARK_FALLBACK.get(target, {}).copy()
+
     # External benchmark from results/main/tables/Table4_external_validation.csv
     if Path(TABLE4_PATH).exists():
         try:
@@ -1604,8 +1616,8 @@ def main() -> None:
                     for line in payload.get("top", []):
                         st.markdown(f"- {line}")
                     c1, c2 = st.columns(2)
-                    c1.image(payload["waterfall"], caption=L["shap_waterfall"], use_container_width=True)
-                    c2.image(payload["force"], caption=L["shap_force"], use_container_width=True)
+                    c1.image(payload["waterfall"], caption=L["shap_waterfall"], use_column_width=True)
+                    c2.image(payload["force"], caption=L["shap_force"], use_column_width=True)
                 else:
                     st.caption(L["shap_stale"])
 
